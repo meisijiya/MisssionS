@@ -53,7 +53,7 @@ def init_db():
 
 # ========== 新闻爬虫 ==========
 def fetch_news():
-    """每天08:00抓取30条新闻（3个源各10条），覆盖模式"""
+    """每天08:00抓取新闻（RSS + 60s每日简报），覆盖模式"""
     rss_feeds = [
         ('36氪', 'https://36kr.com/feed'),
         ('人民日报', 'http://www.people.com.cn/rss/politics.xml'),
@@ -92,6 +92,35 @@ def fetch_news():
                     count += 1
         except Exception as e:
             print(f"[News] Failed {name}: {e}")
+
+    # 60s 每日简报（额外数据源，每天15条精选）
+    try:
+        resp = requests.get('https://60s.viki.moe/v2/60s', headers=headers, timeout=10)
+        raw = resp.json()
+        if not isinstance(raw, dict):
+            raise ValueError(f"API returned {type(raw)}, not dict")
+        news_data = raw.get('data', {})
+        if not isinstance(news_data, dict):
+            raise ValueError(f"data field is {type(news_data)}, not dict")
+        # 60s 的 news 是字符串列表，每条就是标题
+        raw_news = news_data.get('news', [])
+        if isinstance(raw_news, list):
+            for title in raw_news[:15]:
+                if isinstance(title, str) and title.strip():
+                    c.execute(
+                        'INSERT INTO news (title, link, source, summary, fetched_at) VALUES (?, ?, ?, ?, ?)',
+                        (title.strip(), '#', '每天60秒', '', fetched_at)
+                    )
+                    count += 1
+        tip = news_data.get('tip', '').strip()
+        if tip:
+            c.execute(
+                'INSERT INTO news (title, link, source, summary, fetched_at) VALUES (?, ?, ?, ?, ?)',
+                (f'💬 微语：{tip}', '#', '每天60秒', '', fetched_at)
+            )
+            count += 1
+    except Exception as e:
+        print(f"[News] Failed 60s: {e}")
 
     conn.commit()
     conn.close()
