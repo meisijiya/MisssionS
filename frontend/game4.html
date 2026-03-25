@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>快递接接接</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; margin: 0; padding: 0; }
+        body { background: #1a1a2e; overflow: hidden; }
+
+        /* 夜空背景 */
+        .sky {
+            position: fixed; inset: 0;
+            background: linear-gradient(to bottom, #0a0a1a 0%, #1a1a3a 60%, #2d2d5a 100%);
+        }
+        .stars {
+            position: absolute; inset: 0; overflow: hidden;
+        }
+        .star {
+            position: absolute;
+            width: 2px; height: 2px; border-radius: 50%;
+            background: #fff;
+            animation: twinkle 2s ease-in-out infinite;
+        }
+        @keyframes twinkle { 0%,100%{opacity:.2} 50%{opacity:.8} }
+
+        /* 楼房剪影背景 */
+        .city {
+            position: fixed; bottom: 70px; left: 0; right: 0; height: 120px;
+            background: #12121f;
+            clip-path: polygon(0% 100%, 0% 60%, 5% 40%, 10% 70%, 15% 30%, 22% 0%, 28% 50%, 33% 20%, 40% 60%, 45% 10%, 52% 50%, 58% 0%, 65% 40%, 70% 60%, 75% 20%, 82% 50%, 88% 30%, 93% 60%, 100% 40%, 100% 100%);
+        }
+
+        /* 地面 */
+        .ground {
+            position: fixed; bottom: 0; left: 0; right: 0; height: 70px;
+            background: linear-gradient(to top, #2d3a1f, #3d4f2a);
+            border-top: 3px solid #5a7a40;
+        }
+
+        /* 顶部UI */
+        .topbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+            padding: 12px 16px 10px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+        }
+        .back-btn {
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px; color: #e6edf3; padding: 7px 13px; font-size: 12px;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
+        }
+        .title { font-size: 16px; font-weight: 800; color: #FFD93D; }
+        .score-pill {
+            background: rgba(255,217,61,0.15); border: 1px solid rgba(255,217,61,0.35);
+            border-radius: 20px; padding: 5px 14px;
+            color: #FFD93D; font-size: 14px; font-weight: 800;
+        }
+
+        /* 角色：一二 */
+        .player {
+            position: absolute; bottom: 73px;
+            width: 60px; height: 80px;
+            transition: left 0.05s linear;
+            z-index: 20;
+        }
+        .player img {
+            width: 100%; height: 100%; object-fit: contain;
+            animation: playerBounce 0.4s ease-in-out infinite;
+        }
+        @keyframes playerBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+        .player.caught img { animation: playerCatch 0.15s ease-out; }
+        @keyframes playerCatch { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+
+        /* 快递包裹 */
+        .pkg {
+            position: absolute; z-index: 15;
+            font-size: 32px;
+            animation: pkgFall linear forwards;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+        }
+        @keyframes pkgFall {
+            from { transform: translateY(0) rotate(0deg); }
+            to   { transform: translateY(var(--fall-y)) rotate(var(--rot)); }
+        }
+        .pkg.caught {
+            animation: pkgCaught 0.3s ease-out forwards;
+        }
+        @keyframes pkgCaught {
+            0%   { transform: scale(1); opacity: 1; }
+            50%  { transform: scale(1.5); opacity: 0.8; }
+            100% { transform: scale(0) translateY(-60px); opacity: 0; }
+        }
+        .pkg.missed {
+            animation: pkgMissed 0.4s ease-out forwards;
+        }
+        @keyframes pkgMissed {
+            0%   { transform: scale(1) rotate(0deg); opacity: 1; }
+            100% { transform: scale(0.5) translateY(80px) rotate(45deg); opacity: 0; }
+        }
+
+        /* 分数弹出 */
+        .score-pop {
+            position: absolute; font-size: 22px; font-weight: 900;
+            pointer-events: none; z-index: 60;
+            animation: scorePop 0.6s ease-out forwards;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+        @keyframes scorePop {
+            0%   { transform: translateY(0) scale(0.5); opacity: 1; }
+            100% { transform: translateY(-60px) scale(1.1); opacity: 0; }
+        }
+
+        /* 特效 */
+        .combo-big {
+            position: fixed; left: 50%; top: 35%;
+            transform: translate(-50%,-50%);
+            font-size: 56px; font-weight: 900; z-index: 300;
+            color: #FFD93D;
+            text-shadow: 0 0 50px rgba(255,217,61,0.8), 0 4px 0 #CC8800;
+            animation: comboBig 1.2s ease-out forwards;
+        }
+        @keyframes comboBig {
+            0%   { transform: translate(-50%,-50%) scale(0.1) rotate(-10deg); opacity: 1; }
+            30%  { transform: translate(-50%,-50%) scale(1.5) rotate(5deg); opacity: 1; }
+            100% { transform: translate(-50%,-50%) scale(1) rotate(0) translateY(-120px); opacity: 0; }
+        }
+        .achieve {
+            position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg,#1a1a2e,#16213e);
+            border: 1.5px solid #FFD93D; border-radius: 16px;
+            padding: 12px 24px; z-index: 400; color: #fff; text-align: center;
+            box-shadow: 0 0 40px rgba(255,217,61,0.2);
+            animation: achIn .35s ease-out, achOut .4s ease-in 2.3s forwards;
+        }
+        @keyframes achIn  { from{transform:translateX(-50%) translateY(-20px);opacity:0} to{transform:translateX(-50%) translateY(0);opacity:1} }
+        @keyframes achOut { from{opacity:1} to{opacity:0;transform:translateX(-50%) translateY(-15px)} }
+
+        /* 漏接闪烁 */
+        .miss-flash {
+            position: fixed; inset: 0; pointer-events: none; z-index: 200;
+            background: rgba(255,60,60,0.15);
+            animation: missFlash 0.3s ease-out forwards;
+        }
+        @keyframes missFlash { 0%{opacity:1} 100%{opacity:0} }
+
+        /* 底部UI */
+        .bbar {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+            background: linear-gradient(to top, rgba(0,0,0,0.6) 50%, transparent);
+            padding: 14px 12px 18px;
+            display: flex; justify-content: space-around;
+        }
+        .bstat {
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 8px 14px; text-align: center; min-width: 70px;
+        }
+        .bstat-num { font-size: 22px; font-weight: 900; color: #58a6ff; }
+        .bstat-lbl { font-size: 10px; color: rgba(230,237,243,0.35); margin-top: 1px; }
+
+        /* 提示 */
+        .hint {
+            position: fixed; bottom: 90px; left: 0; right: 0;
+            text-align: center; font-size: 12px; color: rgba(230,237,243,0.25);
+            animation: breathe 2s ease-in-out infinite; z-index: 50;
+        }
+        @keyframes breathe { 0%,100%{opacity:.2} 50%{opacity:.55} }
+
+        /* 开始/结束画面 */
+        .overlay {
+            position: fixed; inset: 0; z-index: 500;
+            background: rgba(0,0,0,0.82);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 16px;
+            backdrop-filter: blur(8px);
+        }
+        .overlay-title {
+            font-size: 32px; font-weight: 900; color: #FFD93D;
+            text-shadow: 0 0 30px rgba(255,217,61,0.4);
+        }
+        .overlay-sub { font-size: 14px; color: rgba(255,255,255,0.5); text-align: center; line-height: 1.7; }
+        .overlay-btn {
+            background: linear-gradient(135deg, #FFD93D, #FF8C00);
+            border: none; border-radius: 14px;
+            padding: 13px 36px; font-size: 17px; font-weight: 800;
+            color: #1a1a2e; cursor: pointer;
+            animation: pulse 1.5s ease-in-out infinite;
+            margin-top: 8px;
+        }
+        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+        .result-score { font-size: 52px; font-weight: 900; color: #fff; }
+        .result-label { font-size: 14px; color: rgba(255,255,255,0.4); }
+
+        /* 虚拟按键 */
+        .controls {
+            position: fixed; bottom: 100px; left: 0; right: 0;
+            display: flex; justify-content: space-between;
+            padding: 0 20px; z-index: 60;
+            pointer-events: none;
+        }
+        .ctrl-btn {
+            width: 70px; height: 70px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.2);
+            color: #fff; font-size: 28px;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: all;
+            cursor: pointer;
+            transition: all 0.1s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .ctrl-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.25); }
+    </style>
+</head>
+<body>
+
+<div class="sky">
+    <div class="stars" id="stars"></div>
+</div>
+<div class="city"></div>
+<div class="ground"></div>
+
+<!-- 顶部 -->
+<div class="topbar">
+    <a href="/games" class="back-btn"><i class="fas fa-th"></i> 游戏合集</a>
+    <div class="title">📦 快递接接接</div>
+    <div class="score-pill"><i class="fas fa-star" style="color:#FFD93D"></i> <span id="scoreEl">0</span></div>
+</div>
+
+<!-- 游戏区 -->
+<div id="gameArea" style="position:fixed;inset:0">
+
+    <!-- 一二 -->
+    <div class="player" id="player">
+        <img src="/assets/yiyi.jpg" alt="一二">
+    </div>
+
+    <!-- 虚拟按键 -->
+    <div class="controls" id="controls">
+        <div class="ctrl-btn" id="btnLeft"><i class="fas fa-chevron-left"></i></div>
+        <div class="ctrl-btn" id="btnRight"><i class="fas fa-chevron-right"></i></div>
+    </div>
+</div>
+
+<!-- 提示 -->
+<div class="hint" id="hintEl">
+    <i class="fas fa-arrows-alt-h"></i> 用方向键或按钮控制一二接快递！
+</div>
+
+<!-- 底部 -->
+<div class="bbar">
+    <div class="bstat"><div class="bstat-num" id="comboEl">0</div><div class="bstat-lbl">连击</div></div>
+    <div class="bstat"><div class="bstat-num" id="caughtEl">0</div><div class="bstat-lbl">已接</div></div>
+    <div class="bstat"><div class="bstat-num" id="missedEl" style="color:#FF6B6B">3</div><div class="bstat-lbl">剩余</div></div>
+</div>
+
+<!-- 开始画面 -->
+<div class="overlay" id="startScreen">
+    <div style="font-size:48px">📦</div>
+    <div class="overlay-title">📦 快递接接接</div>
+    <div class="overlay-sub">一二在接天上掉下来的快递！<br>用方向键或屏幕按钮控制一二<br>左右移动接住快递，漏了会扣命！</div>
+    <button class="overlay-btn" onclick="startGame()">开始接快递！</button>
+</div>
+
+<!-- 结果画面 -->
+<div class="overlay" id="resultScreen" style="display:none">
+    <div class="overlay-title">游戏结束！</div>
+    <div class="result-score" id="finalScore">0</div>
+    <div class="result-label">收到快递</div>
+    <button class="overlay-btn" onclick="restartGame()">再来一次</button>
+</div>
+
+<div id="achieveBox"></div>
+
+<script>
+// ========== 生成星星 ==========
+(function() {
+    const stars = document.getElementById('stars');
+    for (let i = 0; i < 40; i++) {
+        const s = document.createElement('div');
+        s.className = 'star';
+        s.style.left = Math.random() * 100 + '%';
+        s.style.top = Math.random() * 60 + '%';
+        s.style.animationDelay = Math.random() * 2 + 's';
+        s.style.width = s.style.height = (1 + Math.random() * 2) + 'px';
+        stars.appendChild(s);
+    }
+})();
+
+// ========== 音效 ==========
+let _ac4 = null;
+function getAudio4() {
+    if (!_ac4) _ac4 = new (window.AudioContext || window.webkitAudioContext)();
+    return _ac4;
+}
+function playCatch() {
+    const ctx = getAudio4();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.setValueAtTime(880, ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.1);
+    g.gain.setValueAtTime(0.2, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+    o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.12);
+}
+function playCombo(n) {
+    const ctx = getAudio4();
+    const freqs = n >= 10 ? [523,659,784,1047] : n >= 5 ? [523,659,784] : [523,659];
+    freqs.forEach((f, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.frequency.value = f;
+        const t = ctx.currentTime + i * 0.07;
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.18, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+        o.start(t); o.stop(t + 0.2);
+    });
+}
+function playMiss() {
+    const ctx = getAudio4();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.setValueAtTime(300, ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.3);
+    g.gain.setValueAtTime(0.25, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.3);
+}
+function playGameOver() {
+    const ctx = getAudio4();
+    [392, 349, 330, 262].forEach((f, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.frequency.value = f;
+        const t = ctx.currentTime + i * 0.18;
+        g.gain.setValueAtTime(0.2, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+        o.start(t); o.stop(t + 0.2);
+    });
+}
+
+// ========== 游戏状态 ==========
+let phase = 'start'; // start | playing | over
+let playerX = 50; // 百分比
+let score = 0, combo = 0, maxCombo = 0;
+let caught = 0, missed = 0;
+let lives = 3;
+let tickTimer = null;
+let spawnTimer = null;
+let pkgSpeed = 2;
+let earned = new Set();
+
+// 按键状态
+let leftPressed = false, rightPressed = false;
+
+const player  = document.getElementById('player');
+const scoreEl = document.getElementById('scoreEl');
+const comboEl = document.getElementById('comboEl');
+const caughtEl = document.getElementById('caughtEl');
+const missedEl = document.getElementById('missedEl');
+const startScreen = document.getElementById('startScreen');
+const resultScreen = document.getElementById('resultScreen');
+const gameArea = document.getElementById('gameArea');
+const hintEl = document.getElementById('hintEl');
+const controls = document.getElementById('controls');
+const btnLeft = document.getElementById('btnLeft');
+const btnRight = document.getElementById('btnRight');
+
+// 快递emoji池
+const PKGS = ['📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦',
+              '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦',
+              '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦',
+              '🎁', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦',
+              '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦',
+              '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦',
+              '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦',
+              '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦',
+              '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦'];
+
+function randomPkg() {
+    return PKGS[Math.floor(Math.random() * PKGS.length)];
+}
+
+// ========== 开始 ==========
+function startGame() {
+    phase = 'playing';
+    startScreen.style.display = 'none';
+    resultScreen.style.display = 'none';
+    score = 0; combo = 0; maxCombo = 0;
+    caught = 0; missed = 0; lives = 3;
+    playerX = 50;
+    pkgSpeed = 2;
+    updateUI();
+    clearAllPkgs();
+    // 隐藏虚拟按键提示一段时间
+    hintEl.style.display = '';
+    setTimeout(() => { if (phase === 'playing') hintEl.style.display = 'none'; }, 4000);
+    tickTimer = setInterval(tick, 16);
+    spawnPkg();
+}
+
+// ========== 每帧 ==========
+function tick() {
+    if (phase !== 'playing') return;
+    const W = window.innerWidth;
+    const playerW = 60;
+    const speed = Math.max(1.5, 3.5 - pkgSpeed * 0.1);
+
+    if (leftPressed)  playerX = Math.max(1, playerX - speed);
+    if (rightPressed) playerX = Math.min(99, playerX + speed);
+
+    player.style.left = (playerX / 100 * (W - playerW)) + 'px';
+
+    // 加速
+    pkgSpeed = Math.min(9, pkgSpeed + 0.0005);
+}
+
+function spawnPkg() {
+    if (phase !== 'playing') return;
+    spawnOnePkg();
+    const delay = Math.max(400, 1200 - pkgSpeed * 60);
+    spawnTimer = setTimeout(spawnPkg, delay);
+}
+
+function spawnOnePkg() {
+    if (phase !== 'playing') return;
+    const el = document.createElement('div');
+    el.className = 'pkg';
+    const emoji = randomPkg();
+    el.textContent = emoji;
+    const x = 5 + Math.random() * 85;
+    const duration = Math.max(1.2, 3.5 - pkgSpeed * 0.22);
+    const rot = (Math.random() - 0.5) * 120;
+    const groundTop = window.innerHeight - 73;
+    const fallY = groundTop - 60;
+    el.style.cssText = `
+        left: ${x}%;
+        top: -60px;
+        font-size: ${28 + Math.random() * 12}px;
+        --fall-y: ${fallY + 60}px;
+        --rot: ${rot}deg;
+        animation-duration: ${duration}s;
+        animation-timing-function: linear;
+    `;
+    el._x = x;
+    el._caught = false;
+    gameArea.appendChild(el);
+
+    // 检测碰撞
+    function check() {
+        if (el._caught || el._missed) return;
+        const rect = el.getBoundingClientRect();
+        const pRect = player.getBoundingClientRect();
+        // 碰到角色
+        if (rect.bottom >= pRect.top && rect.bottom <= pRect.bottom + 20 &&
+            rect.left < pRect.right && rect.right > pRect.left) {
+            el._caught = true;
+            el.classList.add('caught');
+            catchPkg(el);
+            setTimeout(() => el.remove(), 300);
+            return;
+        }
+        // 落出屏幕
+        if (rect.top > window.innerHeight) {
+            el._missed = true;
+            el.classList.add('missed');
+            missPkg(el);
+            setTimeout(() => el.remove(), 400);
+            return;
+        }
+        requestAnimationFrame(check);
+    }
+    requestAnimationFrame(check);
+}
+
+function catchPkg(el) {
+    caught++; combo++;
+    if (combo > maxCombo) maxCombo = combo;
+    if (combo >= 3 && combo % 3 === 0) {
+        showCombo(combo);
+        playCombo(combo);
+        checkAchieve();
+    } else {
+        playCatch();
+    }
+    score += Math.min(5, combo);
+    updateUI();
+    // 分数弹出
+    spawnScorePop(el, '+' + Math.min(5, combo));
+    // 角色接住动画
+    player.classList.remove('caught');
+    void player.offsetWidth;
+    player.classList.add('caught');
+    setTimeout(() => player.classList.remove('caught'), 150);
+}
+
+function missPkg(el) {
+    missed++; lives--;
+    combo = 0;
+    updateUI();
+    playMiss();
+    doFlash();
+    if (lives <= 0) gameOver();
+}
+
+function gameOver() {
+    phase = 'over';
+    clearInterval(tickTimer);
+    clearTimeout(spawnTimer);
+    playGameOver();
+    clearAllPkgs();
+    document.getElementById('finalScore').textContent = caught;
+    resultScreen.style.display = 'flex';
+    checkAchieve();
+}
+
+function restartGame() {
+    startGame();
+}
+
+function updateUI() {
+    scoreEl.textContent = score;
+    comboEl.textContent = combo;
+    caughtEl.textContent = caught;
+    missedEl.textContent = lives;
+}
+
+function clearAllPkgs() {
+    document.querySelectorAll('.pkg').forEach(e => e.remove());
+}
+
+function spawnScorePop(el, text) {
+    const pop = document.createElement('div');
+    pop.className = 'score-pop';
+    const rect = el.getBoundingClientRect();
+    pop.style.left = rect.left + 'px';
+    pop.style.top = rect.top + 'px';
+    pop.textContent = text;
+    pop.style.color = combo >= 5 ? '#FFD93D' : '#58a6ff';
+    document.body.appendChild(pop);
+    setTimeout(() => pop.remove(), 600);
+}
+
+function showCombo(n) {
+    const el = document.createElement('div');
+    el.className = 'combo-big';
+    el.textContent = n + ' COMBO! 🔥';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1200);
+}
+
+function doFlash() {
+    const f = document.createElement('div');
+    f.className = 'miss-flash';
+    document.body.appendChild(f);
+    setTimeout(() => f.remove(), 300);
+}
+
+// ========== 成就 ==========
+const ACHS = [
+    {id:'c3',  label:'收到3件! 🐾',    cond:()=>caught>=3},
+    {id:'c10', label:'收到10件! 📦',   cond:()=>caught>=10},
+    {id:'c20', label:'收到20件! 🎁',   cond:()=>caught>=20},
+    {id:'c30', label:'收到30件! 🌟',   cond:()=>caught>=30},
+    {id:'co5', label:'5连击! ⚡',      cond:()=>maxCombo>=5},
+    {id:'co10',label:'10连击! 💫',     cond:()=>maxCombo>=10},
+    {id:'co15',label:'15连击! 🔥',     cond:()=>maxCombo>=15},
+];
+function checkAchieve() {
+    ACHS.forEach(a => {
+        if (!earned.has(a.id) && a.cond()) {
+            earned.add(a.id);
+            const el = document.createElement('div');
+            el.className = 'achieve';
+            el.innerHTML = `<div style="font-size:16px">🏆 成就解锁</div><div style="font-size:12px;margin-top:3px;color:#FFD93D">${a.label}</div>`;
+            document.getElementById('achieveBox').appendChild(el);
+            setTimeout(() => el.remove(), 2800);
+        }
+    });
+}
+
+// ========== 键盘控制 ==========
+document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft' || e.key === 'a') leftPressed = true;
+    if (e.key === 'ArrowRight' || e.key === 'd') rightPressed = true;
+});
+document.addEventListener('keyup', e => {
+    if (e.key === 'ArrowLeft' || e.key === 'a') leftPressed = false;
+    if (e.key === 'ArrowRight' || e.key === 'd') rightPressed = false;
+});
+
+// 触摸拖动
+let touchStartX = null;
+gameArea.addEventListener('touchstart', e => {
+    touchStartX = e.touches[0].clientX;
+});
+gameArea.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (touchStartX === null) return;
+    const dx = e.touches[0].clientX - touchStartX;
+    touchStartX = e.touches[0].clientX;
+    playerX = Math.max(1, Math.min(99, playerX + dx * 0.3));
+}, { passive: false });
+
+// 虚拟按键
+let leftInterval = null, rightInterval = null;
+function startLeft()  { leftPressed = true; }
+function stopLeft()    { leftPressed = false; }
+function startRight() { rightPressed = true; }
+function stopRight()  { rightPressed = false; }
+
+btnLeft.addEventListener('touchstart',  e => { e.preventDefault(); startLeft(); });
+btnLeft.addEventListener('touchend',    e => { e.preventDefault(); stopLeft(); });
+btnLeft.addEventListener('mousedown',   e => { startLeft(); });
+btnLeft.addEventListener('mouseup',     e => { stopLeft(); });
+btnRight.addEventListener('touchstart', e => { e.preventDefault(); startRight(); });
+btnRight.addEventListener('touchend',   e => { e.preventDefault(); stopRight(); });
+btnRight.addEventListener('mouseup',    e => { stopRight(); });
+btnRight.addEventListener('mousedown',  e => { startRight(); });
+</script>
+</body>
+</html>

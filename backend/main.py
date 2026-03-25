@@ -218,6 +218,10 @@ def games():
 def game3():
     return send_from_directory(app.static_folder, 'game3.html')
 
+@app.route('/game4')
+def game4():
+    return send_from_directory(app.static_folder, 'game4.html')
+
 init_db()
 init_scheduler()
 if __name__ == '__main__':
