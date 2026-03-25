@@ -41,6 +41,13 @@ def init_db():
         fetched_at TEXT,
         batch INTEGER DEFAULT 0
     )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS game_scores (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        game_name TEXT NOT NULL,
+        username TEXT NOT NULL,
+        score INTEGER NOT NULL,
+        played_at TEXT NOT NULL
+    )''')
     conn.commit()
     conn.close()
 
@@ -163,6 +170,52 @@ def clear_completed():
     conn.commit()
     conn.close()
     return jsonify({'success': True})
+
+# ========== 游戏排行榜 API ==========
+@app.route('/api/scores/<game_name>', methods=['GET'])
+def get_scores(game_name):
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    today = datetime.now(BJ_TZ).strftime('%Y-%m-%d')
+    c.execute('''
+        SELECT username, score, played_at FROM game_scores
+        WHERE game_name=? AND played_at=?
+        ORDER BY score DESC LIMIT 20
+    ''', (game_name, today))
+    rows = c.fetchall()
+    conn.close()
+    return jsonify([dict(row) for row in rows])
+
+@app.route('/api/scores/<game_name>', methods=['POST'])
+def submit_score(game_name):
+    data = request.json
+    username = (data.get('username') or '匿名').strip()[:20]
+    score = int(data.get('score') or 0)
+    if score <= 0:
+        return jsonify({'error': '分数无效'}), 400
+    today = datetime.now(BJ_TZ).strftime('%Y-%m-%d')
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    # 同一用户同一天同游戏只保留最高分
+    c.execute('''
+        SELECT id, score FROM game_scores
+        WHERE game_name=? AND username=? AND played_at=?
+    ''', (game_name, username, today))
+    existing = c.fetchone()
+    if existing:
+        if score > existing[1]:
+            c.execute('UPDATE game_scores SET score=? WHERE id=?', (score, existing[0]))
+            updated = True
+        else:
+            updated = False
+    else:
+        c.execute('INSERT INTO game_scores (game_name, username, score, played_at) VALUES (?, ?, ?, ?)',
+                  (game_name, username, score, today))
+        updated = True
+    conn.commit()
+    conn.close()
+    return jsonify({'updated': updated, 'score': score})
 
 # ========== 新闻 API ==========
 @app.route('/api/news', methods=['GET'])

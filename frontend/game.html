@@ -183,7 +183,17 @@
         }
         .bstat-val { font-size: 22px; font-weight: 800; color: var(--accent); }
         .bstat-lbl { font-size: 11px; color: var(--text-2); margin-top: 2px; }
-    </style>
+    
+.lb-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; margin-bottom: 4px; }
+.lb-row.me { background: rgba(255,217,61,0.1); border: 1px solid rgba(255,217,61,0.25); }
+.lb-rank { font-size: 14px; font-weight: 900; width: 22px; color: rgba(255,255,255,0.4); text-align: center; }
+.lb-rank.g1 { color: #FFD93D; }
+.lb-rank.g2 { color: #c0c0c0; }
+.lb-rank.g3 { color: #cd7f32; }
+.lb-name { flex: 1; font-size: 14px; color: #e6edf3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-pts { font-size: 14px; font-weight: 800; color: #4fc3f7; }
+.lb-empty { text-align: center; padding: 30px; color: rgba(255,255,255,0.3); font-size: 13px; }
+</style>
 </head>
 <body>
 <div class="bg-pattern"></div>
@@ -203,6 +213,10 @@
         <span class="combo-num" id="maxComboEl">0</span>
         <span style="color:var(--text-2);font-size:12px">最高</span>
     </div>
+    <button class="stat-pill" onclick="showLBE()" style="cursor:pointer">
+        <i class="fas fa-trophy" style="color:#FFD93D"></i>
+        <span style="color:var(--text-2);font-size:12px">排行</span>
+    </button>
 </div>
 
 <!-- 敲击区 -->
@@ -251,6 +265,43 @@
 
 <div id="achieveBox"></div>
 
+
+<!-- 游戏结束 -->
+<div id="resultScreen" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.88);display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;backdrop-filter:blur(8px)">
+    <div style="font-size:36px;font-weight:900;color:#FFD93D;text-shadow:0 0 30px rgba(255,217,61,0.5)">时间到！</div>
+    <div id="resultEggs" style="font-size:56px;font-weight:900;color:#fff">0</div>
+    <div style="font-size:14px;color:rgba(255,255,255,0.35)">共敲碎蛋数</div>
+    <div style="display:flex;gap:14px">
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:8px 14px;text-align:center">
+            <div id="resMaxCombo" style="font-size:22px;font-weight:900;color:#FFD93D">0</div>
+            <div style="font-size:10px;color:rgba(230,237,243,0.3)">最高连击</div>
+        </div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:min(300px,85vw)">
+        <div style="font-size:12px;color:rgba(255,255,255,0.5)">上传分数到排行榜</div>
+        <div style="display:flex;gap:8px;width:100%">
+            <input id="nameInputE" placeholder="你的名字" maxlength="16" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:9px 12px;color:#fff;font-size:14px;outline:none">
+            <button onclick="submitScoreE()" style="background:linear-gradient(135deg,#FFD93D,#FF8C00);border:none;border-radius:10px;padding:9px 16px;color:#1a1a2e;font-size:13px;font-weight:800;cursor:pointer">提交</button>
+        </div>
+        <div id="lbStatusE" style="font-size:13px;color:#3fb950"></div>
+    </div>
+    <button onclick="restartGameE()" style="background:linear-gradient(135deg,#FFD93D,#FF8C00);border:none;border-radius:14px;padding:13px 38px;font-size:16px;font-weight:800;color:#1a1a2e;cursor:pointer">再来一次</button>
+</div>
+
+<!-- LB Panel -->
+<div id="lbPanelE" style="position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.88);display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px)">
+  <div style="background:#161b22;border:1px solid #30363d;border-radius:20px;padding:24px 20px;width:min(360px,92vw);max-height:80vh;overflow-y:auto">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <div style="font-size:18px;font-weight:900;color:#FFD93D">🏆 今日排行</div>
+        <div id="lbDateE" style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px"></div>
+      </div>
+      <button onclick="closeLBE()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:rgba(255,255,255,0.6);padding:6px 12px;font-size:11px;cursor:pointer">关闭</button>
+    </div>
+    <div id="lbListE"><div style="text-align:center;padding:20px;color:rgba(255,255,255,0.4);font-size:13px">加载中...</div></div>
+    <div style="margin-top:14px;font-size:11px;color:rgba(255,255,255,0.25);text-align:center">每日 03:00 重置</div>
+  </div>
+</div>
 <script>
     // ========== 音效 ==========
     let _ac = null;
@@ -352,7 +403,98 @@
 
         // HP
         hp--;
-        updateHP();
+        /* ==== 60秒计时器 ==== */
+    var gameTimer = null;
+    var timeLeft = 60;
+    var gamePhase = 'playing';
+
+    function startTimer() {
+        timeLeft = 60;
+        gamePhase = 'playing';
+        gameTimer = setInterval(function() {
+            timeLeft--;
+            var timerEl = document.getElementById('timerEl');
+            if (timerEl) timerEl.textContent = timeLeft + '秒';
+            if (timeLeft <= 0) {
+                clearInterval(gameTimer);
+                gamePhase = 'over';
+                endGameE();
+            }
+        }, 1000);
+    }
+
+    function endGameE() {
+        var rs = document.getElementById('resultScreen');
+        document.getElementById('resultEggs').textContent = totalEggs;
+        document.getElementById('resMaxCombo').textContent = maxCombo;
+        var nameInput = document.getElementById('nameInputE');
+        if (nameInput) {
+            var prefs = JSON.parse(localStorage.getItem('taskapp_prefs') || '{}');
+            nameInput.value = prefs.username || '';
+        }
+        rs.style.display = 'flex';
+    }
+
+    function restartGameE() {
+        totalEggs = 0; combo = 0; maxCombo = 0; comboTimer = null;
+        hp = 15;
+        clearInterval(gameTimer);
+        var rs = document.getElementById('resultScreen');
+        if (rs) rs.style.display = 'none';
+        document.getElementById('comboEl').textContent = '0';
+        document.getElementById('maxComboEl').textContent = '0';
+        spawnNewEgg();
+        startTimer();
+    }
+
+    function showLBE() {
+        var panel = document.getElementById('lbPanelE');
+        panel.style.display = 'flex';
+        document.getElementById('lbDateE').textContent = new Date().toLocaleDateString('zh-CN');
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/api/scores/egg', true);
+        xhr.onload = function() {
+            var data = JSON.parse(xhr.responseText);
+            var myName = (document.getElementById('nameInputE') || {}).value || '';
+            if (data.length === 0) {
+                document.getElementById('lbListE').innerHTML = '<div class="lb-empty">暂无排行，掐你名字上榜吧！</div>';
+                return;
+            }
+            var medals = ['\uD83E\uDD47', '\uD83E\uDD48', '\uD83E\uDD49'];
+            var html = '';
+            data.forEach(function(row, i) {
+                var rank = i + 1;
+                var cls = rank === 1 ? 'g1' : rank === 2 ? 'g2' : rank === 3 ? 'g3' : '';
+                var isMe = myName && row.username === myName;
+                html += '<div class="lb-row' + (isMe ? ' me' : '') + '">' +
+                    '<div class="lb-rank ' + cls + '">' + (rank <= 3 ? medals[rank - 1] : rank) + '</div>' +
+                    '<div class="lb-name">' + (isMe ? '<b>' + row.username + '</b>' : row.username) + '</div>' +
+                    '<div class="lb-pts">' + row.score + '个蛋</div></div>';
+            });
+            document.getElementById('lbListE').innerHTML = html;
+        };
+        xhr.send();
+    }
+
+    function closeLBE() { document.getElementById('lbPanelE').style.display = 'none'; }
+
+    function submitScoreE() {
+        var name = (document.getElementById('nameInputE') || {}).value || '';
+        if (!name.trim()) { document.getElementById('lbStatusE').textContent = '请先输入名字'; return; }
+        var score = totalEggs || 0;
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/scores/egg', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.onload = function() {
+            var r = JSON.parse(xhr.responseText);
+            document.getElementById('lbStatusE').textContent = r.updated ? '上传成功！' : '已有更高分，未更新';
+        };
+        xhr.send(JSON.stringify({ username: name, score: score }));
+    }
+
+    startTimer();
+    updateHP();
+
         if (hp <= 0) breakEgg();
 
         updateStats();
@@ -389,7 +531,98 @@
             const el = document.getElementById('c' + i);
             if (el) el.classList.remove('show');
         }
-        updateHP();
+        /* ==== 60秒计时器 ==== */
+    var gameTimer = null;
+    var timeLeft = 60;
+    var gamePhase = 'playing';
+
+    function startTimer() {
+        timeLeft = 60;
+        gamePhase = 'playing';
+        gameTimer = setInterval(function() {
+            timeLeft--;
+            var timerEl = document.getElementById('timerEl');
+            if (timerEl) timerEl.textContent = timeLeft + '秒';
+            if (timeLeft <= 0) {
+                clearInterval(gameTimer);
+                gamePhase = 'over';
+                endGameE();
+            }
+        }, 1000);
+    }
+
+    function endGameE() {
+        var rs = document.getElementById('resultScreen');
+        document.getElementById('resultEggs').textContent = totalEggs;
+        document.getElementById('resMaxCombo').textContent = maxCombo;
+        var nameInput = document.getElementById('nameInputE');
+        if (nameInput) {
+            var prefs = JSON.parse(localStorage.getItem('taskapp_prefs') || '{}');
+            nameInput.value = prefs.username || '';
+        }
+        rs.style.display = 'flex';
+    }
+
+    function restartGameE() {
+        totalEggs = 0; combo = 0; maxCombo = 0; comboTimer = null;
+        hp = 15;
+        clearInterval(gameTimer);
+        var rs = document.getElementById('resultScreen');
+        if (rs) rs.style.display = 'none';
+        document.getElementById('comboEl').textContent = '0';
+        document.getElementById('maxComboEl').textContent = '0';
+        spawnNewEgg();
+        startTimer();
+    }
+
+    function showLBE() {
+        var panel = document.getElementById('lbPanelE');
+        panel.style.display = 'flex';
+        document.getElementById('lbDateE').textContent = new Date().toLocaleDateString('zh-CN');
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/api/scores/egg', true);
+        xhr.onload = function() {
+            var data = JSON.parse(xhr.responseText);
+            var myName = (document.getElementById('nameInputE') || {}).value || '';
+            if (data.length === 0) {
+                document.getElementById('lbListE').innerHTML = '<div class="lb-empty">暂无排行，掐你名字上榜吧！</div>';
+                return;
+            }
+            var medals = ['\uD83E\uDD47', '\uD83E\uDD48', '\uD83E\uDD49'];
+            var html = '';
+            data.forEach(function(row, i) {
+                var rank = i + 1;
+                var cls = rank === 1 ? 'g1' : rank === 2 ? 'g2' : rank === 3 ? 'g3' : '';
+                var isMe = myName && row.username === myName;
+                html += '<div class="lb-row' + (isMe ? ' me' : '') + '">' +
+                    '<div class="lb-rank ' + cls + '">' + (rank <= 3 ? medals[rank - 1] : rank) + '</div>' +
+                    '<div class="lb-name">' + (isMe ? '<b>' + row.username + '</b>' : row.username) + '</div>' +
+                    '<div class="lb-pts">' + row.score + '个蛋</div></div>';
+            });
+            document.getElementById('lbListE').innerHTML = html;
+        };
+        xhr.send();
+    }
+
+    function closeLBE() { document.getElementById('lbPanelE').style.display = 'none'; }
+
+    function submitScoreE() {
+        var name = (document.getElementById('nameInputE') || {}).value || '';
+        if (!name.trim()) { document.getElementById('lbStatusE').textContent = '请先输入名字'; return; }
+        var score = totalEggs || 0;
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/scores/egg', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.onload = function() {
+            var r = JSON.parse(xhr.responseText);
+            document.getElementById('lbStatusE').textContent = r.updated ? '上传成功！' : '已有更高分，未更新';
+        };
+        xhr.send(JSON.stringify({ username: name, score: score }));
+    }
+
+    startTimer();
+    updateHP();
+
     }
 
     // ========== 碎片粒子 ==========
@@ -520,7 +753,98 @@
         setTimeout(() => el.remove(), 2700);
     }
 
+    /* ==== 60秒计时器 ==== */
+    var gameTimer = null;
+    var timeLeft = 60;
+    var gamePhase = 'playing';
+
+    function startTimer() {
+        timeLeft = 60;
+        gamePhase = 'playing';
+        gameTimer = setInterval(function() {
+            timeLeft--;
+            var timerEl = document.getElementById('timerEl');
+            if (timerEl) timerEl.textContent = timeLeft + '秒';
+            if (timeLeft <= 0) {
+                clearInterval(gameTimer);
+                gamePhase = 'over';
+                endGameE();
+            }
+        }, 1000);
+    }
+
+    function endGameE() {
+        var rs = document.getElementById('resultScreen');
+        document.getElementById('resultEggs').textContent = totalEggs;
+        document.getElementById('resMaxCombo').textContent = maxCombo;
+        var nameInput = document.getElementById('nameInputE');
+        if (nameInput) {
+            var prefs = JSON.parse(localStorage.getItem('taskapp_prefs') || '{}');
+            nameInput.value = prefs.username || '';
+        }
+        rs.style.display = 'flex';
+    }
+
+    function restartGameE() {
+        totalEggs = 0; combo = 0; maxCombo = 0; comboTimer = null;
+        hp = 15;
+        clearInterval(gameTimer);
+        var rs = document.getElementById('resultScreen');
+        if (rs) rs.style.display = 'none';
+        document.getElementById('comboEl').textContent = '0';
+        document.getElementById('maxComboEl').textContent = '0';
+        spawnNewEgg();
+        startTimer();
+    }
+
+    function showLBE() {
+        var panel = document.getElementById('lbPanelE');
+        panel.style.display = 'flex';
+        document.getElementById('lbDateE').textContent = new Date().toLocaleDateString('zh-CN');
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/api/scores/egg', true);
+        xhr.onload = function() {
+            var data = JSON.parse(xhr.responseText);
+            var myName = (document.getElementById('nameInputE') || {}).value || '';
+            if (data.length === 0) {
+                document.getElementById('lbListE').innerHTML = '<div class="lb-empty">暂无排行，掐你名字上榜吧！</div>';
+                return;
+            }
+            var medals = ['\uD83E\uDD47', '\uD83E\uDD48', '\uD83E\uDD49'];
+            var html = '';
+            data.forEach(function(row, i) {
+                var rank = i + 1;
+                var cls = rank === 1 ? 'g1' : rank === 2 ? 'g2' : rank === 3 ? 'g3' : '';
+                var isMe = myName && row.username === myName;
+                html += '<div class="lb-row' + (isMe ? ' me' : '') + '">' +
+                    '<div class="lb-rank ' + cls + '">' + (rank <= 3 ? medals[rank - 1] : rank) + '</div>' +
+                    '<div class="lb-name">' + (isMe ? '<b>' + row.username + '</b>' : row.username) + '</div>' +
+                    '<div class="lb-pts">' + row.score + '个蛋</div></div>';
+            });
+            document.getElementById('lbListE').innerHTML = html;
+        };
+        xhr.send();
+    }
+
+    function closeLBE() { document.getElementById('lbPanelE').style.display = 'none'; }
+
+    function submitScoreE() {
+        var name = (document.getElementById('nameInputE') || {}).value || '';
+        if (!name.trim()) { document.getElementById('lbStatusE').textContent = '请先输入名字'; return; }
+        var score = totalEggs || 0;
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/scores/egg', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.onload = function() {
+            var r = JSON.parse(xhr.responseText);
+            document.getElementById('lbStatusE').textContent = r.updated ? '上传成功！' : '已有更高分，未更新';
+        };
+        xhr.send(JSON.stringify({ username: name, score: score }));
+    }
+
+    startTimer();
     updateHP();
+
 </script>
 </body>
 </html>
