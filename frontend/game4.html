@@ -8,127 +8,178 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; margin: 0; padding: 0; }
-        body { background: #1a1a2e; overflow: hidden; }
+        body { background: #0a0a1a; overflow: hidden; }
 
-        /* 夜空背景 */
+        /* 夜空 */
         .sky {
             position: fixed; inset: 0;
-            background: linear-gradient(to bottom, #0a0a1a 0%, #1a1a3a 60%, #2d2d5a 100%);
+            background: linear-gradient(to bottom, #050510 0%, #0d0d2a 50%, #1a1a3a 100%);
         }
-        .stars {
-            position: absolute; inset: 0; overflow: hidden;
-        }
+        .stars { position: absolute; inset: 0; overflow: hidden; }
         .star {
-            position: absolute;
-            width: 2px; height: 2px; border-radius: 50%;
-            background: #fff;
+            position: absolute; border-radius: 50%; background: #fff;
             animation: twinkle 2s ease-in-out infinite;
         }
         @keyframes twinkle { 0%,100%{opacity:.2} 50%{opacity:.8} }
 
-        /* 楼房剪影背景 */
+        /* 楼房剪影 */
         .city {
-            position: fixed; bottom: 70px; left: 0; right: 0; height: 120px;
-            background: #12121f;
-            clip-path: polygon(0% 100%, 0% 60%, 5% 40%, 10% 70%, 15% 30%, 22% 0%, 28% 50%, 33% 20%, 40% 60%, 45% 10%, 52% 50%, 58% 0%, 65% 40%, 70% 60%, 75% 20%, 82% 50%, 88% 30%, 93% 60%, 100% 40%, 100% 100%);
+            position: fixed; bottom: 70px; left: 0; right: 0; height: 100px;
+            background: #0d0d1f;
+            clip-path: polygon(
+                0% 100%, 0% 55%, 3% 40%, 7% 55%, 10% 25%, 15% 55%, 18% 35%, 22% 55%,
+                25% 15%, 30% 50%, 33% 30%, 37% 55%, 40% 20%, 45% 55%, 48% 10%, 53% 55%,
+                56% 35%, 60% 55%, 63% 25%, 67% 55%, 70% 40%, 73% 55%, 77% 20%, 80% 55%,
+                83% 35%, 87% 55%, 90% 15%, 93% 55%, 96% 40%, 100% 55%, 100% 100%
+            );
         }
 
         /* 地面 */
         .ground {
             position: fixed; bottom: 0; left: 0; right: 0; height: 70px;
-            background: linear-gradient(to top, #2d3a1f, #3d4f2a);
-            border-top: 3px solid #5a7a40;
+            background: linear-gradient(to top, #1e2b10, #2a3d16);
+            border-top: 3px solid #4a6b2a;
         }
 
-        /* 顶部UI */
-        .topbar {
+        /* 顶部HUD */
+        .hud {
             position: fixed; top: 0; left: 0; right: 0; z-index: 50;
-            padding: 12px 16px 10px;
+            padding: 10px 16px 8px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
             display: flex; align-items: center; justify-content: space-between;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
         }
-        .back-btn {
+        .hud-back {
             background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 10px; color: #e6edf3; padding: 7px 13px; font-size: 12px;
-            text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
+            border-radius: 8px; color: #e6edf3; padding: 5px 10px; font-size: 11px;
+            text-decoration: none; display: flex; align-items: center; gap: 4px;
         }
-        .title { font-size: 16px; font-weight: 800; color: #FFD93D; }
-        .score-pill {
-            background: rgba(255,217,61,0.15); border: 1px solid rgba(255,217,61,0.35);
-            border-radius: 20px; padding: 5px 14px;
-            color: #FFD93D; font-size: 14px; font-weight: 800;
+        .hud-title { font-size: 14px; font-weight: 800; color: #FFD93D; }
+        .hud-right { display: flex; align-items: center; gap: 10px; }
+
+        /* HP条 */
+        .hp-wrap {
+            display: flex; align-items: center; gap: 6px;
+        }
+        .hp-hearts {
+            display: flex; gap: 3px;
+        }
+        .heart {
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+        .heart.lost { opacity: 0.2; transform: scale(0.8); }
+        .hp-track {
+            width: 80px; height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px; overflow: hidden;
+        }
+        .hp-fill {
+            height: 100%; border-radius: 4px;
+            background: linear-gradient(90deg, #f85149, #FFD93D);
+            transition: width 0.3s ease-out;
+        }
+        .hp-fill.low { background: linear-gradient(90deg, #f85149, #ff4444); }
+
+        /* 分数 */
+        .score-box {
+            background: rgba(255,217,61,0.12); border: 1px solid rgba(255,217,61,0.3);
+            border-radius: 20px; padding: 4px 12px;
+            font-size: 13px; font-weight: 800; color: #FFD93D;
         }
 
-        /* 角色：一二 */
+        /* 波数 */
+        .wave-box {
+            background: rgba(79,195,247,0.12); border: 1px solid rgba(79,195,247,0.3);
+            border-radius: 20px; padding: 4px 10px;
+            font-size: 11px; color: #4fc3f7;
+        }
+
+        /* 难度条 */
+        .diff-bar {
+            position: fixed; top: 50px; left: 0; right: 0; height: 3px; z-index: 40;
+            background: rgba(255,255,255,0.05);
+        }
+        .diff-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4fc3f7, #FFD93D, #f85149);
+            transition: width 0.5s;
+        }
+
+        /* 玩家 */
         .player {
             position: absolute; bottom: 73px;
-            width: 60px; height: 80px;
-            transition: left 0.05s linear;
+            width: 56px; height: 70px;
             z-index: 20;
+            transition: left 0.04s linear;
         }
         .player img {
             width: 100%; height: 100%; object-fit: contain;
-            animation: playerBounce 0.4s ease-in-out infinite;
+            animation: bob 0.5s ease-in-out infinite;
         }
-        @keyframes playerBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
-        .player.caught img { animation: playerCatch 0.15s ease-out; }
-        @keyframes playerCatch { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+        @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+        .player.catch img { animation: catchAnim 0.15s ease-out; }
+        @keyframes catchAnim { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
 
-        /* 快递包裹 */
+        /* 快递 */
         .pkg {
             position: absolute; z-index: 15;
-            font-size: 32px;
             animation: pkgFall linear forwards;
-            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
         }
         @keyframes pkgFall {
-            from { transform: translateY(0) rotate(0deg); }
-            to   { transform: translateY(var(--fall-y)) rotate(var(--rot)); }
+            from { transform: translateY(var(--from-y)) rotate(0deg); opacity: 1; }
+            to   { transform: translateY(var(--to-y)) rotate(var(--rot)); opacity: 1; }
         }
-        .pkg.caught {
-            animation: pkgCaught 0.3s ease-out forwards;
-        }
+        .pkg.caught { animation: pkgCaught 0.3s ease-out forwards; }
         @keyframes pkgCaught {
             0%   { transform: scale(1); opacity: 1; }
-            50%  { transform: scale(1.5); opacity: 0.8; }
-            100% { transform: scale(0) translateY(-60px); opacity: 0; }
+            50%  { transform: scale(1.6); opacity: 0.6; }
+            100% { transform: scale(0) translateY(-80px); opacity: 0; }
         }
-        .pkg.missed {
-            animation: pkgMissed 0.4s ease-out forwards;
-        }
-        @keyframes pkgMissed {
-            0%   { transform: scale(1) rotate(0deg); opacity: 1; }
-            100% { transform: scale(0.5) translateY(80px) rotate(45deg); opacity: 0; }
+        .pkg.missed { animation: pkgMiss 0.4s ease-out forwards; }
+        @keyframes pkgMiss {
+            0%   { transform: scale(1) translateY(0); opacity: 1; }
+            100% { transform: scale(0.4) translateY(60px) rotate(40deg); opacity: 0; }
         }
 
         /* 分数弹出 */
         .score-pop {
-            position: absolute; font-size: 22px; font-weight: 900;
+            position: absolute; font-size: 20px; font-weight: 900;
             pointer-events: none; z-index: 60;
-            animation: scorePop 0.6s ease-out forwards;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            animation: scorePop 0.7s ease-out forwards;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.6);
         }
         @keyframes scorePop {
             0%   { transform: translateY(0) scale(0.5); opacity: 1; }
-            100% { transform: translateY(-60px) scale(1.1); opacity: 0; }
+            100% { transform: translateY(-70px) scale(1.2); opacity: 0; }
         }
 
-        /* 特效 */
+        /* 连击 */
         .combo-big {
-            position: fixed; left: 50%; top: 35%;
+            position: fixed; left: 50%; top: 30%;
             transform: translate(-50%,-50%);
-            font-size: 56px; font-weight: 900; z-index: 300;
+            font-size: 60px; font-weight: 900; z-index: 300;
             color: #FFD93D;
-            text-shadow: 0 0 50px rgba(255,217,61,0.8), 0 4px 0 #CC8800;
-            animation: comboBig 1.2s ease-out forwards;
+            text-shadow: 0 0 60px rgba(255,217,61,0.9), 0 4px 0 #CC8800;
+            animation: comboBig 1.3s ease-out forwards;
         }
         @keyframes comboBig {
             0%   { transform: translate(-50%,-50%) scale(0.1) rotate(-10deg); opacity: 1; }
-            30%  { transform: translate(-50%,-50%) scale(1.5) rotate(5deg); opacity: 1; }
-            100% { transform: translate(-50%,-50%) scale(1) rotate(0) translateY(-120px); opacity: 0; }
+            30%  { transform: translate(-50%,-50%) scale(1.6) rotate(5deg); opacity: 1; }
+            100% { transform: translate(-50%,-50%) scale(1) rotate(0) translateY(-140px); opacity: 0; }
         }
+
+        /* 屏幕效果 */
+        .flash-miss {
+            position: fixed; inset: 0; z-index: 200; pointer-events: none;
+            background: radial-gradient(ellipse at 50% 100%, rgba(255,60,60,0.25), transparent 60%);
+            animation: flashMiss 0.3s ease-out forwards;
+        }
+        @keyframes flashMiss { 0%{opacity:1} 100%{opacity:0} }
+
+        /* 成就 */
         .achieve {
-            position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+            position: fixed; top: 65px; left: 50%; transform: translateX(-50%);
             background: linear-gradient(135deg,#1a1a2e,#16213e);
             border: 1.5px solid #FFD93D; border-radius: 16px;
             padding: 12px 24px; z-index: 400; color: #fff; text-align: center;
@@ -138,493 +189,444 @@
         @keyframes achIn  { from{transform:translateX(-50%) translateY(-20px);opacity:0} to{transform:translateX(-50%) translateY(0);opacity:1} }
         @keyframes achOut { from{opacity:1} to{opacity:0;transform:translateX(-50%) translateY(-15px)} }
 
-        /* 漏接闪烁 */
-        .miss-flash {
-            position: fixed; inset: 0; pointer-events: none; z-index: 200;
-            background: rgba(255,60,60,0.15);
-            animation: missFlash 0.3s ease-out forwards;
-        }
-        @keyframes missFlash { 0%{opacity:1} 100%{opacity:0} }
-
-        /* 底部UI */
+        /* 底部HUD */
         .bbar {
             position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
-            background: linear-gradient(to top, rgba(0,0,0,0.6) 50%, transparent);
+            background: linear-gradient(to top, rgba(0,0,0,0.7) 50%, transparent);
             padding: 14px 12px 18px;
             display: flex; justify-content: space-around;
         }
         .bstat {
             background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px; padding: 8px 14px; text-align: center; min-width: 70px;
+            border-radius: 12px; padding: 8px 14px; text-align: center; min-width: 72px;
         }
         .bstat-num { font-size: 22px; font-weight: 900; color: #58a6ff; }
         .bstat-lbl { font-size: 10px; color: rgba(230,237,243,0.35); margin-top: 1px; }
 
-        /* 提示 */
-        .hint {
+        /* 虚拟按键 */
+        .ctrl-area {
             position: fixed; bottom: 90px; left: 0; right: 0;
-            text-align: center; font-size: 12px; color: rgba(230,237,243,0.25);
-            animation: breathe 2s ease-in-out infinite; z-index: 50;
+            display: flex; justify-content: space-between; padding: 0 16px;
+            z-index: 60; pointer-events: none;
         }
-        @keyframes breathe { 0%,100%{opacity:.2} 50%{opacity:.55} }
+        .ctrl-btn {
+            width: 68px; height: 68px; border-radius: 50%;
+            background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15);
+            color: rgba(255,255,255,0.6); font-size: 26px;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: all; cursor: pointer;
+            transition: all 0.1s;
+        }
+        .ctrl-btn:active { transform: scale(0.88); background: rgba(255,255,255,0.2); }
 
         /* 开始/结束画面 */
         .overlay {
             position: fixed; inset: 0; z-index: 500;
-            background: rgba(0,0,0,0.82);
+            background: rgba(0,0,0,0.85);
             display: flex; flex-direction: column;
-            align-items: center; justify-content: center; gap: 16px;
+            align-items: center; justify-content: center; gap: 14px;
             backdrop-filter: blur(8px);
         }
-        .overlay-title {
-            font-size: 32px; font-weight: 900; color: #FFD93D;
-            text-shadow: 0 0 30px rgba(255,217,61,0.4);
-        }
-        .overlay-sub { font-size: 14px; color: rgba(255,255,255,0.5); text-align: center; line-height: 1.7; }
-        .overlay-btn {
+        .ov-title { font-size: 30px; font-weight: 900; color: #FFD93D; text-shadow: 0 0 30px rgba(255,217,61,0.4); }
+        .ov-sub { font-size: 13px; color: rgba(255,255,255,0.45); text-align: center; line-height: 1.7; }
+        .ov-btn {
             background: linear-gradient(135deg, #FFD93D, #FF8C00);
-            border: none; border-radius: 14px;
-            padding: 13px 36px; font-size: 17px; font-weight: 800;
-            color: #1a1a2e; cursor: pointer;
-            animation: pulse 1.5s ease-in-out infinite;
-            margin-top: 8px;
+            border: none; border-radius: 14px; padding: 13px 38px;
+            font-size: 16px; font-weight: 800; color: #1a1a2e; cursor: pointer;
+            animation: pulse 1.5s ease-in-out infinite; margin-top: 8px;
         }
-        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
-        .result-score { font-size: 52px; font-weight: 900; color: #fff; }
-        .result-label { font-size: 14px; color: rgba(255,255,255,0.4); }
-
-        /* 虚拟按键 */
-        .controls {
-            position: fixed; bottom: 100px; left: 0; right: 0;
-            display: flex; justify-content: space-between;
-            padding: 0 20px; z-index: 60;
-            pointer-events: none;
+        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04)} }
+        .ov-score { font-size: 54px; font-weight: 900; color: #fff; }
+        .ov-label { font-size: 12px; color: rgba(255,255,255,0.35); }
+        .ov-char {
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px; padding: 12px 20px;
         }
-        .ctrl-btn {
-            width: 70px; height: 70px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.1);
-            border: 2px solid rgba(255,255,255,0.2);
-            color: #fff; font-size: 28px;
-            display: flex; align-items: center; justify-content: center;
-            pointer-events: all;
-            cursor: pointer;
-            transition: all 0.1s;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .ctrl-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.25); }
+        .ov-char img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 3px solid #FFD93D; }
+        .ov-char-info { text-align: left; }
+        .ov-char-name { font-size: 16px; font-weight: 800; color: #FFD93D; }
+        .ov-char-desc { font-size: 11px; color: rgba(255,255,255,0.4); }
     </style>
 </head>
 <body>
 
-<div class="sky">
-    <div class="stars" id="stars"></div>
-</div>
+<div class="sky"><div class="stars" id="stars"></div></div>
 <div class="city"></div>
 <div class="ground"></div>
 
-<!-- 顶部 -->
-<div class="topbar">
-    <a href="/games" class="back-btn"><i class="fas fa-th"></i> 游戏合集</a>
-    <div class="title">📦 快递接接接</div>
-    <div class="score-pill"><i class="fas fa-star" style="color:#FFD93D"></i> <span id="scoreEl">0</span></div>
+<!-- HUD -->
+<div class="hud">
+    <a href="/games" class="hud-back"><i class="fas fa-th"></i> 游戏</a>
+    <div class="hud-title">📦 快递接接接</div>
+    <div class="hud-right">
+        <div class="wave-box">波 <span id="waveEl">1</span></div>
+        <div class="hp-wrap">
+            <div class="hp-hearts" id="hearts">
+                <span class="heart" id="h1">❤️</span>
+                <span class="heart" id="h2">❤️</span>
+                <span class="heart" id="h3">❤️</span>
+            </div>
+            <div class="hp-track">
+                <div class="hp-fill" id="hpFill" style="width:100%"></div>
+            </div>
+        </div>
+        <div class="score-box"><i class="fas fa-star" style="color:#FFD93D"></i> <span id="scoreEl">0</span></div>
+    </div>
 </div>
 
-<!-- 游戏区 -->
-<div id="gameArea" style="position:fixed;inset:0">
+<!-- 难度条 -->
+<div class="diff-bar"><div class="diff-fill" id="diffFill" style="width:5%"></div></div>
 
-    <!-- 一二 -->
+<!-- 游戏区 -->
+<div id="gameArea" style="position:fixed;inset:0;z-index:10">
+
+    <!-- 玩家 -->
     <div class="player" id="player">
         <img src="/assets/bubu-black-pkg.png" alt="布布">
     </div>
 
     <!-- 虚拟按键 -->
-    <div class="controls" id="controls">
-        <div class="ctrl-btn" id="btnLeft"><i class="fas fa-chevron-left"></i></div>
-        <div class="ctrl-btn" id="btnRight"><i class="fas fa-chevron-right"></i></div>
+    <div class="ctrl-area">
+        <div class="ctrl-btn" id="btnL"><i class="fas fa-chevron-left"></i></div>
+        <div class="ctrl-btn" id="btnR"><i class="fas fa-chevron-right"></i></div>
     </div>
-</div>
-
-<!-- 提示 -->
-<div class="hint" id="hintEl">
-    <i class="fas fa-arrows-alt-h"></i> 用方向键或按钮控制一二接快递！
 </div>
 
 <!-- 底部 -->
 <div class="bbar">
     <div class="bstat"><div class="bstat-num" id="comboEl">0</div><div class="bstat-lbl">连击</div></div>
     <div class="bstat"><div class="bstat-num" id="caughtEl">0</div><div class="bstat-lbl">已接</div></div>
-    <div class="bstat"><div class="bstat-num" id="missedEl" style="color:#FF6B6B">3</div><div class="bstat-lbl">剩余</div></div>
+    <div class="bstat"><div class="bstat-num" id="waveScoreEl">0</div><div class="bstat-lbl">本波分数</div></div>
 </div>
 
 <!-- 开始画面 -->
 <div class="overlay" id="startScreen">
-    <div style="font-size:48px">📦</div>
-    <div style="display:flex;align-items:center;gap:12px;margin-top:8px">
-        <img src="/assets/bubu-black-pkg.png" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid #FFD93D;box-shadow:0 0 16px rgba(255,217,61,0.4)">
-        <div style="font-size:28px">🐕</div>
+    <div class="ov-char">
+        <img src="/assets/bubu-black-pkg.png" alt="布布">
+        <div class="ov-char-info">
+            <div class="ov-char-name">布布</div>
+            <div class="ov-char-desc">接住掉下来的快递！<br>漏接扣血条，血条空了游戏结束</div>
+        </div>
     </div>
-    <div class="overlay-title">📦 快递接接接</div>
-    <div class="overlay-sub">一二在接天上掉下来的快递！<br>用方向键或屏幕按钮控制一二<br>左右移动接住快递，漏了会扣命！</div>
-    <button class="overlay-btn" onclick="startGame()">开始接快递！</button>
+    <div class="ov-title">📦 快递接接接</div>
+    <div class="ov-sub">难度会逐渐增加！<br>每波结束后短暂休息，继续下一波<br>坚持越久分数越高！</div>
+    <button class="ov-btn" onclick="startGame()">开始挑战！</button>
 </div>
 
 <!-- 结果画面 -->
 <div class="overlay" id="resultScreen" style="display:none">
-    <div class="overlay-title">游戏结束！</div>
-    <div class="result-score" id="finalScore">0</div>
-    <div class="result-label">收到快递</div>
-    <button class="overlay-btn" onclick="restartGame()">再来一次</button>
+    <div class="ov-title">游戏结束</div>
+    <div class="ov-score" id="finalScore">0</div>
+    <div class="ov-label">收到快递</div>
+    <div style="display:flex;gap:16px;margin-top:4px">
+        <div class="bstat" style="background:rgba(79,195,247,0.1);border-color:rgba(79,195,247,0.2)">
+            <div class="bstat-num" style="color:#4fc3f7" id="resWave">1</div>
+            <div class="bstat-lbl">到达波数</div>
+        </div>
+        <div class="bstat" style="background:rgba(255,217,61,0.1);border-color:rgba(255,217,61,0.2)">
+            <div class="bstat-num" style="color:#FFD93D" id="resCombo">0</div>
+            <div class="bstat-lbl">最高连击</div>
+        </div>
+    </div>
+    <button class="ov-btn" onclick="restartGame()">再来一次</button>
 </div>
 
 <div id="achieveBox"></div>
 
 <script>
-// ========== 生成星星 ==========
-(function() {
-    const stars = document.getElementById('stars');
-    for (let i = 0; i < 40; i++) {
-        const s = document.createElement('div');
-        s.className = 'star';
-        s.style.left = Math.random() * 100 + '%';
-        s.style.top = Math.random() * 60 + '%';
-        s.style.animationDelay = Math.random() * 2 + 's';
-        s.style.width = s.style.height = (1 + Math.random() * 2) + 'px';
-        stars.appendChild(s);
+// ========== 星空 ==========
+(function(){
+    const s = document.getElementById('stars');
+    for(let i=0;i<50;i++){
+        const x=document.createElement('div');
+        x.className='star';
+        x.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*55}%;
+            width:${1+Math.random()*2}px;height:${x.style.width};
+            animation-delay:${Math.random()*3}s`;
+        s.appendChild(x);
     }
 })();
 
 // ========== 音效 ==========
-let _ac4 = null;
-function getAudio4() {
-    if (!_ac4) _ac4 = new (window.AudioContext || window.webkitAudioContext)();
-    return _ac4;
-}
-function playCatch() {
-    const ctx = getAudio4();
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.connect(g); g.connect(ctx.destination);
-    o.frequency.setValueAtTime(880, ctx.currentTime);
-    o.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.1);
-    g.gain.setValueAtTime(0.2, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
-    o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.12);
-}
-function playCombo(n) {
-    const ctx = getAudio4();
-    const freqs = n >= 10 ? [523,659,784,1047] : n >= 5 ? [523,659,784] : [523,659];
-    freqs.forEach((f, i) => {
-        const o = ctx.createOscillator(), g = ctx.createGain();
-        o.connect(g); g.connect(ctx.destination);
-        o.frequency.value = f;
-        const t = ctx.currentTime + i * 0.07;
-        g.gain.setValueAtTime(0, t);
-        g.gain.linearRampToValueAtTime(0.18, t + 0.02);
-        g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-        o.start(t); o.stop(t + 0.2);
-    });
-}
-function playMiss() {
-    const ctx = getAudio4();
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.connect(g); g.connect(ctx.destination);
-    o.frequency.setValueAtTime(300, ctx.currentTime);
-    o.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.3);
-    g.gain.setValueAtTime(0.25, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-    o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.3);
-}
-function playGameOver() {
-    const ctx = getAudio4();
-    [392, 349, 330, 262].forEach((f, i) => {
-        const o = ctx.createOscillator(), g = ctx.createGain();
-        o.connect(g); g.connect(ctx.destination);
-        o.frequency.value = f;
-        const t = ctx.currentTime + i * 0.18;
-        g.gain.setValueAtTime(0.2, t);
-        g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-        o.start(t); o.stop(t + 0.2);
-    });
-}
+let _ac=null;const getAC=()=>{if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();return _ac;};
+const playCatch=()=>{const c=getAC(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.setValueAtTime(880,c.currentTime);o.frequency.exponentialRampToValueAtTime(1760,c.currentTime+0.1);g.gain.setValueAtTime(0.18,c.currentTime);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.12);o.start(c.currentTime);o.stop(c.currentTime+0.12);};
+const playCombo=(n)=>{const c=getAC();(n>=8?[523,659,784,1047]:n>=5?[523,659,784]:[523,659]).forEach((f,i)=>{const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=f;const t=c.currentTime+i*0.07;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.18,t+0.02);g.gain.exponentialRampToValueAtTime(0.001,t+0.2);o.start(t);o.stop(t+0.2);});};
+const playMiss=()=>{const c=getAC(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.setValueAtTime(300,c.currentTime);o.frequency.exponentialRampToValueAtTime(60,c.currentTime+0.35);g.gain.setValueAtTime(0.25,c.currentTime);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.35);o.start(c.currentTime);o.stop(c.currentTime+0.35);};
+const playWaveClear=()=>{const c=getAC();[523,659,784,1047].forEach((f,i)=>{const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=f;const t=c.currentTime+i*0.1;g.gain.setValueAtTime(0.2,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.25);o.start(t);o.stop(t+0.25);});};
+const playGameOver=()=>{const c=getAC();[392,349,330,262].forEach((f,i)=>{const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=f;const t=c.currentTime+i*0.2;g.gain.setValueAtTime(0.2,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.25);o.start(t);o.stop(t+0.25);});};
 
-// ========== 游戏状态 ==========
-let phase = 'start'; // start | playing | over
-let playerX = 50; // 百分比
-let score = 0, combo = 0, maxCombo = 0;
-let caught = 0, missed = 0;
-let lives = 3;
-let tickTimer = null;
-let spawnTimer = null;
-let pkgSpeed = 2;
-let earned = new Set();
+// ========== 状态 ==========
+let phase='start';
+let playerX=50, hp=100, maxHp=100;
+let score=0, combo=0, maxCombo=0;
+let caught=0, totalCaught=0;
+let wave=1, waveScore=0;
+let difficulty=0; // 0~100
+let tickTimer=null, spawnTimer=null, waveTimer=null;
+let leftP=false, rightP=false;
+let earned=new Set();
 
-// 按键状态
-let leftPressed = false, rightPressed = false;
-
-const player  = document.getElementById('player');
-const scoreEl = document.getElementById('scoreEl');
-const comboEl = document.getElementById('comboEl');
-const caughtEl = document.getElementById('caughtEl');
-const missedEl = document.getElementById('missedEl');
-const startScreen = document.getElementById('startScreen');
-const resultScreen = document.getElementById('resultScreen');
-const gameArea = document.getElementById('gameArea');
-const hintEl = document.getElementById('hintEl');
-const controls = document.getElementById('controls');
-const btnLeft = document.getElementById('btnLeft');
-const btnRight = document.getElementById('btnRight');
-
-// 快递emoji池
-const PKGS = ['📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦',
-              '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦',
-              '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦',
-              '🎁', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦',
-              '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦',
-              '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦',
-              '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦',
-              '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦',
-              '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦', '📦'];
-
-function randomPkg() {
-    return PKGS[Math.floor(Math.random() * PKGS.length)];
-}
+const player=document.getElementById('player');
+const hpFill=document.getElementById('hpFill');
+const scoreEl=document.getElementById('scoreEl');
+const comboEl=document.getElementById('comboEl');
+const caughtEl=document.getElementById('caughtEl');
+const waveEl=document.getElementById('waveEl');
+const waveScoreEl=document.getElementById('waveScoreEl');
+const diffFill=document.getElementById('diffFill');
+const startScr=document.getElementById('startScreen');
+const resultScr=document.getElementById('resultScreen');
+const gameArea=document.getElementById('gameArea');
+const btnL=document.getElementById('btnL');
+const btnR=document.getElementById('btnR');
 
 // ========== 开始 ==========
-function startGame() {
-    phase = 'playing';
-    startScreen.style.display = 'none';
-    resultScreen.style.display = 'none';
-    score = 0; combo = 0; maxCombo = 0;
-    caught = 0; missed = 0; lives = 3;
-    playerX = 50;
-    pkgSpeed = 2;
+function startGame(){
+    phase='playing';
+    startScr.style.display='none';
+    resultScr.style.display='none';
+    hp=100;score=0;combo=0;maxCombo=0;
+    caught=0;totalCaught=0;wave=1;waveScore=0;difficulty=5;
     updateUI();
-    clearAllPkgs();
-    // 隐藏虚拟按键提示一段时间
-    hintEl.style.display = '';
-    setTimeout(() => { if (phase === 'playing') hintEl.style.display = 'none'; }, 4000);
-    tickTimer = setInterval(tick, 16);
+    startWave();
+}
+
+// ========== 波次系统 ==========
+function startWave(){
+    caught=0; waveScore=0;
+    waveEl.textContent=wave;
+    diffFill.style.width=difficulty+'%';
+    waveTimer=setTimeout(()=>{
+        if(phase!=='playing')return;
+        // 波次结束
+        playWaveClear();
+        spawnTimer&&clearTimeout(spawnTimer);
+        document.querySelectorAll('.pkg').forEach(e=>e.remove());
+        wave++;
+        difficulty=Math.min(95, difficulty+12);
+        diffFill.style.width=difficulty+'%';
+        waveEl.textContent=wave;
+        // 加血奖励
+        hp=Math.min(maxHp, hp+30);
+        updateHP();
+        // 下一波更快
+        setTimeout(startWave, 2000);
+    }, 18000 - difficulty*50); // 波次时长：18秒~最慢3秒
+    spawnLoop();
+}
+
+function spawnLoop(){
+    if(phase!=='playing')return;
     spawnPkg();
+    const baseDelay=Math.max(250, 1400-difficulty*10);
+    const jitter=Math.random()*300;
+    spawnTimer=setTimeout(spawnLoop, baseDelay+jitter);
 }
 
 // ========== 每帧 ==========
-function tick() {
-    if (phase !== 'playing') return;
-    const W = window.innerWidth;
-    const playerW = 60;
-    const speed = Math.max(1.5, 3.5 - pkgSpeed * 0.1);
-
-    if (leftPressed)  playerX = Math.max(1, playerX - speed);
-    if (rightPressed) playerX = Math.min(99, playerX + speed);
-
-    player.style.left = (playerX / 100 * (W - playerW)) + 'px';
-
-    // 加速
-    pkgSpeed = Math.min(9, pkgSpeed + 0.0005);
+function tick(){
+    const W=window.innerWidth, PW=56;
+    const spd=Math.max(1.2, 3.5-difficulty*0.02);
+    if(leftP)  playerX=Math.max(1, playerX-spd);
+    if(rightP) playerX=Math.min(99, playerX+spd);
+    player.style.left=(playerX/100*(W-PW))+'px';
 }
 
-function spawnPkg() {
-    if (phase !== 'playing') return;
-    spawnOnePkg();
-    const delay = Math.max(400, 1200 - pkgSpeed * 60);
-    spawnTimer = setTimeout(spawnPkg, delay);
-}
-
-function spawnOnePkg() {
-    if (phase !== 'playing') return;
-    const el = document.createElement('div');
-    el.className = 'pkg';
-    const emoji = randomPkg();
-    el.textContent = emoji;
-    const x = 5 + Math.random() * 85;
-    const duration = Math.max(1.2, 3.5 - pkgSpeed * 0.22);
-    const rot = (Math.random() - 0.5) * 120;
-    const groundTop = window.innerHeight - 73;
-    const fallY = groundTop - 60;
-    el.style.cssText = `
-        left: ${x}%;
-        top: -60px;
-        font-size: ${28 + Math.random() * 12}px;
-        --fall-y: ${fallY + 60}px;
-        --rot: ${rot}deg;
-        animation-duration: ${duration}s;
-        animation-timing-function: linear;
+function spawnPkg(){
+    const el=document.createElement('div');
+    el.className='pkg';
+    // 小包更快更难接
+    const isSmall=Math.random()<difficulty/150;
+    const isRare=Math.random()<0.05;
+    const size=isSmall?24:isRare?40:34;
+    const fallPx=window.innerHeight-73+60;
+    const dur=Math.max(1.0, 3.5-difficulty*0.025);
+    el.style.cssText=`
+        left:${5+Math.random()*85}%;
+        top:${-(size+10)}px;
+        font-size:${size}px;
+        --from-y:${-(size+10)}px;
+        --to-y:${fallPx}px;
+        --rot:${(Math.random()-0.5)*80}deg;
+        animation-duration:${dur}s;
     `;
-    el._x = x;
-    el._caught = false;
+    el.textContent=isRare?'🎁':'📦';
+    if(isRare) el.style.filter='drop-shadow(0 0 12px rgba(255,217,61,0.8))';
+    el._x=parseFloat(el.style.left);
+    el._caught=false;
     gameArea.appendChild(el);
+    checkHit(el);
+}
 
-    // 检测碰撞
-    function check() {
-        if (el._caught || el._missed) return;
-        const rect = el.getBoundingClientRect();
-        const pRect = player.getBoundingClientRect();
-        // 碰到角色
-        if (rect.bottom >= pRect.top && rect.bottom <= pRect.bottom + 20 &&
-            rect.left < pRect.right && rect.right > pRect.left) {
-            el._caught = true;
+function checkHit(el){
+    function loop(){
+        if(el._caught||el._removed)return;
+        const r=el.getBoundingClientRect();
+        const pr=player.getBoundingClientRect();
+        if(r.bottom>=pr.top && r.bottom<=pr.bottom+25 && r.left<pr.right && r.right>pr.left){
+            el._caught=true;
             el.classList.add('caught');
             catchPkg(el);
-            setTimeout(() => el.remove(), 300);
+            setTimeout(()=>el.remove(),300);
             return;
         }
-        // 落出屏幕
-        if (rect.top > window.innerHeight) {
-            el._missed = true;
+        if(r.top>window.innerHeight){
+            el._removed=true;
             el.classList.add('missed');
             missPkg(el);
-            setTimeout(() => el.remove(), 400);
+            setTimeout(()=>el.remove(),400);
             return;
         }
-        requestAnimationFrame(check);
+        requestAnimationFrame(loop);
     }
-    requestAnimationFrame(check);
+    requestAnimationFrame(loop);
 }
 
-function catchPkg(el) {
-    caught++; combo++;
-    if (combo > maxCombo) maxCombo = combo;
-    if (combo >= 3 && combo % 3 === 0) {
-        showCombo(combo);
-        playCombo(combo);
-        checkAchieve();
-    } else {
-        playCatch();
-    }
-    score += Math.min(5, combo);
+function catchPkg(el){
+    caught++; totalCaught++; combo++;
+    if(combo>maxCombo)maxCombo=combo;
+    const pts=Math.min(3, Math.ceil(combo/3));
+    score+=pts;
+    const diffBonus=Math.ceil(difficulty/20);
+    waveScore+=pts*diffBonus;
     updateUI();
-    // 分数弹出
-    spawnScorePop(el, '+' + Math.min(5, combo));
-    // 角色接住动画
-    player.classList.remove('caught');
-    void player.offsetWidth;
-    player.classList.add('caught');
-    setTimeout(() => player.classList.remove('caught'), 150);
+    playCatch();
+    player.classList.remove('catch');void player.offsetWidth;player.classList.add('catch');
+    setTimeout(()=>player.classList.remove('catch'),150);
+    if(combo>=3&&combo%3===0){playCombo(combo);showCombo(combo);checkAchieve();}
+    spawnPop(el,'+'+pts*diffBonus, combo>=3?'#FFD93D':'#58a6ff');
 }
 
-function missPkg(el) {
-    missed++; lives--;
-    combo = 0;
-    updateUI();
-    playMiss();
-    doFlash();
-    if (lives <= 0) gameOver();
-}
-
-function gameOver() {
-    phase = 'over';
-    clearInterval(tickTimer);
-    clearTimeout(spawnTimer);
-    playGameOver();
-    clearAllPkgs();
-    document.getElementById('finalScore').textContent = caught;
-    resultScreen.style.display = 'flex';
+function missPkg(el){
+    combo=0;
+    const dmg=Math.max(8, 20-difficulty*0.1);
+    hp=Math.max(0, hp-dmg);
+    updateHP(); updateUI(); playMiss(); doFlash();
+    if(hp<=0){gameOver();return;}
     checkAchieve();
 }
 
-function restartGame() {
-    startGame();
+function gameOver(){
+    phase='over';
+    clearInterval(tickTimer);
+    clearTimeout(spawnTimer);
+    clearTimeout(waveTimer);
+    document.querySelectorAll('.pkg').forEach(e=>{e.style.animation='none';e.remove()});
+    playGameOver();
+    document.getElementById('finalScore').textContent=totalCaught;
+    document.getElementById('resWave').textContent=wave;
+    document.getElementById('resCombo').textContent=maxCombo;
+    resultScr.style.display='flex';
+    checkAchieve();
 }
 
-function updateUI() {
-    scoreEl.textContent = score;
-    comboEl.textContent = combo;
-    caughtEl.textContent = caught;
-    missedEl.textContent = lives;
+function restartGame(){startGame();}
+
+function updateUI(){
+    scoreEl.textContent=score;
+    comboEl.textContent=combo;
+    caughtEl.textContent=totalCaught;
+    waveScoreEl.textContent=waveScore;
 }
 
-function clearAllPkgs() {
-    document.querySelectorAll('.pkg').forEach(e => e.remove());
+function updateHP(){
+    hpFill.style.width=hp+'%';
+    hpFill.classList.toggle('low', hp<=30);
+    for(let i=1;i<=3;i++){
+        document.getElementById('h'+i).classList.toggle('lost', hp<(i-1)*33);
+    }
 }
 
-function spawnScorePop(el, text) {
-    const pop = document.createElement('div');
-    pop.className = 'score-pop';
-    const rect = el.getBoundingClientRect();
-    pop.style.left = rect.left + 'px';
-    pop.style.top = rect.top + 'px';
-    pop.textContent = text;
-    pop.style.color = combo >= 5 ? '#FFD93D' : '#58a6ff';
+function spawnPop(el,text,color){
+    const pop=document.createElement('div');
+    pop.className='score-pop';
+    const r=el.getBoundingClientRect();
+    pop.style.left=r.left+'px';
+    pop.style.top=r.top+'px';
+    pop.style.color=color;
+    pop.textContent=text;
     document.body.appendChild(pop);
-    setTimeout(() => pop.remove(), 600);
+    setTimeout(()=>pop.remove(),700);
 }
 
-function showCombo(n) {
-    const el = document.createElement('div');
-    el.className = 'combo-big';
-    el.textContent = n + ' COMBO! 🔥';
+function showCombo(n){
+    const el=document.createElement('div');
+    el.className='combo-big';
+    el.textContent=n+' COMBO! 🔥';
     document.body.appendChild(el);
-    setTimeout(() => el.remove(), 1200);
+    setTimeout(()=>el.remove(),1300);
 }
 
-function doFlash() {
-    const f = document.createElement('div');
-    f.className = 'miss-flash';
+function doFlash(){
+    const f=document.createElement('div');
+    f.className='flash-miss';
     document.body.appendChild(f);
-    setTimeout(() => f.remove(), 300);
+    setTimeout(()=>f.remove(),300);
 }
 
 // ========== 成就 ==========
-const ACHS = [
-    {id:'c3',  label:'收到3件! 🐾',    cond:()=>caught>=3},
-    {id:'c10', label:'收到10件! 📦',   cond:()=>caught>=10},
-    {id:'c20', label:'收到20件! 🎁',   cond:()=>caught>=20},
-    {id:'c30', label:'收到30件! 🌟',   cond:()=>caught>=30},
+const ACHS=[
+    {id:'c5',  label:'收到5件! 🐾',    cond:()=>totalCaught>=5},
+    {id:'c15', label:'收到15件! 📦',   cond:()=>totalCaught>=15},
+    {id:'c30', label:'收到30件! 🎁',   cond:()=>totalCaught>=30},
+    {id:'c50', label:'收到50件! 🌟',   cond:()=>totalCaught>=50},
+    {id:'w3',  label:'到达波3! ⚡',     cond:()=>wave>=3},
+    {id:'w5',  label:'到达波5! 💫',     cond:()=>wave>=5},
     {id:'co5', label:'5连击! ⚡',      cond:()=>maxCombo>=5},
-    {id:'co10',label:'10连击! 💫',     cond:()=>maxCombo>=10},
-    {id:'co15',label:'15连击! 🔥',     cond:()=>maxCombo>=15},
+    {id:'co10',label:'10连击! 🔥',      cond:()=>maxCombo>=10},
 ];
-function checkAchieve() {
-    ACHS.forEach(a => {
-        if (!earned.has(a.id) && a.cond()) {
+function checkAchieve(){
+    ACHS.forEach(a=>{
+        if(!earned.has(a.id)&&a.cond()){
             earned.add(a.id);
-            const el = document.createElement('div');
-            el.className = 'achieve';
-            el.innerHTML = `<div style="font-size:16px">🏆 成就解锁</div><div style="font-size:12px;margin-top:3px;color:#FFD93D">${a.label}</div>`;
+            const el=document.createElement('div');
+            el.className='achieve';
+            el.innerHTML=`<div style="font-size:15px">🏆 成就解锁</div><div style="font-size:12px;margin-top:3px;color:#FFD93D">${a.label}</div>`;
             document.getElementById('achieveBox').appendChild(el);
-            setTimeout(() => el.remove(), 2800);
+            setTimeout(()=>el.remove(),2800);
         }
     });
 }
 
-// ========== 键盘控制 ==========
-document.addEventListener('keydown', e => {
-    if (e.key === 'ArrowLeft' || e.key === 'a') leftPressed = true;
-    if (e.key === 'ArrowRight' || e.key === 'd') rightPressed = true;
+// ========== 控制 ==========
+tickTimer=setInterval(tick,16);
+
+const startL=()=>{leftP=true};
+const stopL=()=>{leftP=false};
+const startR=()=>{rightP=true};
+const stopR=()=>{rightP=false};
+
+btnL.addEventListener('mousedown',e=>{e.preventDefault();startL()});
+btnL.addEventListener('mouseup',stopL);
+btnL.addEventListener('mouseleave',stopL);
+btnL.addEventListener('touchstart',e=>{e.preventDefault();startL()},{passive:false});
+btnL.addEventListener('touchend',e=>{e.preventDefault();stopL()},{passive:false});
+btnR.addEventListener('mousedown',e=>{e.preventDefault();startR()});
+btnR.addEventListener('mouseup',stopR);
+btnR.addEventListener('mouseleave',stopR);
+btnR.addEventListener('touchstart',e=>{e.preventDefault();startR()},{passive:false});
+btnR.addEventListener('touchend',e=>{e.preventDefault();stopR()},{passive:false});
+
+document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowLeft'||e.key==='a') leftP=true;
+    if(e.key==='ArrowRight'||e.key==='d') rightP=true;
 });
-document.addEventListener('keyup', e => {
-    if (e.key === 'ArrowLeft' || e.key === 'a') leftPressed = false;
-    if (e.key === 'ArrowRight' || e.key === 'd') rightPressed = false;
+document.addEventListener('keyup',e=>{
+    if(e.key==='ArrowLeft'||e.key==='a') leftP=false;
+    if(e.key==='ArrowRight'||e.key==='d') rightP=false;
 });
 
-// 触摸拖动
-let touchStartX = null;
-gameArea.addEventListener('touchstart', e => {
-    touchStartX = e.touches[0].clientX;
-});
-gameArea.addEventListener('touchmove', e => {
+// 触摸滑动
+let touchX=null;
+gameArea.addEventListener('touchstart',e=>{touchX=e.touches[0].clientX;},{passive:true});
+gameArea.addEventListener('touchmove',e=>{
     e.preventDefault();
-    if (touchStartX === null) return;
-    const dx = e.touches[0].clientX - touchStartX;
-    touchStartX = e.touches[0].clientX;
-    playerX = Math.max(1, Math.min(99, playerX + dx * 0.3));
-}, { passive: false });
-
-// 虚拟按键
-let leftInterval = null, rightInterval = null;
-function startLeft()  { leftPressed = true; }
-function stopLeft()    { leftPressed = false; }
-function startRight() { rightPressed = true; }
-function stopRight()  { rightPressed = false; }
-
-btnLeft.addEventListener('touchstart',  e => { e.preventDefault(); startLeft(); });
-btnLeft.addEventListener('touchend',    e => { e.preventDefault(); stopLeft(); });
-btnLeft.addEventListener('mousedown',   e => { startLeft(); });
-btnLeft.addEventListener('mouseup',     e => { stopLeft(); });
-btnRight.addEventListener('touchstart', e => { e.preventDefault(); startRight(); });
-btnRight.addEventListener('touchend',   e => { e.preventDefault(); stopRight(); });
-btnRight.addEventListener('mouseup',    e => { stopRight(); });
-btnRight.addEventListener('mousedown',  e => { startRight(); });
+    if(touchX===null)return;
+    const dx=e.touches[0].clientX-touchX;
+    touchX=e.touches[0].clientX;
+    playerX=Math.max(1,Math.min(99,playerX+dx*0.25));
+},{passive:false});
 </script>
 </body>
 </html>
