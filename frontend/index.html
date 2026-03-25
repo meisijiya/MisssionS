@@ -79,7 +79,7 @@
             white-space: nowrap;
             overflow: hidden;
             padding: 11px 0 11px 72px;
-            animation: ticker 40s linear infinite;
+            animation: ticker 80s linear infinite;
         }
         .news-track:hover { animation-play-state: paused; }
         .news-item {
@@ -545,7 +545,9 @@
     function renderTicker(news) {
         const track = document.getElementById('news-track');
         if (!news || !news.length) { setTickerDefault(); return; }
-        const dup = [...news, ...news];
+        // 随机打乱，双倍重复实现无缝滚动
+        const shuffled = [...news].sort(() => Math.random() - 0.5);
+        const dup = [...shuffled, ...shuffled];
         track.innerHTML = dup.map(n =>
             `<a class="news-item" href="${n.link||'#'}" target="_blank">
                 <span class="news-src">${esc(n.source)}</span>${esc(n.title)}
