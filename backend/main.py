@@ -214,10 +214,6 @@ def game():
 def games():
     return send_from_directory(app.static_folder, 'games.html')
 
-@app.route('/game2')
-def game2():
-    return send_from_directory(app.static_folder, 'game2.html')
-
 @app.route('/game3')
 def game3():
     return send_from_directory(app.static_folder, 'game3.html')
