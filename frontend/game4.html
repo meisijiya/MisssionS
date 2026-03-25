@@ -316,7 +316,7 @@ var G={
   _catch:function(el){
     this.totalCaught++;this.combo++;
     if(this.combo>this.maxCombo)this.maxCombo=this.combo;
-    var base=Math.min(3,1+Math.floor(this.combo/4);
+    var base=Math.min(3,1+Math.floor(this.combo/4));
     var mult=Math.ceil(this.diff/20);
     var pts=base*mult;
     this.score+=pts;
