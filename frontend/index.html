@@ -555,6 +555,16 @@
         ).join('');
     }
 
+    // 每20秒刷新一次滚动内容，实现"直播"效果
+    setInterval(async function() {
+        try {
+            const fresh = await fetch('/api/news').then(r => r.json());
+            tickerNews = fresh;
+            renderTicker(tickerNews);
+            document.getElementById('news-count-badge').textContent = tickerNews.length;
+        } catch(e) {}
+    }, 20000);
+
     function setTickerDefault() {
         document.getElementById('news-track').innerHTML =
             '<span class="news-item"><span class="news-src">系统</span>正在加载新闻...</span>';
