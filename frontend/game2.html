@@ -24,15 +24,22 @@
             transition: background 0.3s;
         }
 
-        /* 背景 */
-        .bg { position: fixed; inset: 0; pointer-events: none; z-index: 0;
-            background: radial-gradient(circle at 50% 100%, rgba(255,120,50,0.08) 0%, transparent 60%); }
+        /* ========== 背景 ========== */
+        .bg {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+            background: radial-gradient(ellipse at 30% 80%, rgba(135,206,250,0.12) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 20%, rgba(144,238,144,0.08) 0%, transparent 50%);
+        }
+        .grass {
+            position: fixed; bottom: 0; left: 0; right: 0; height: 60px;
+            background: linear-gradient(to top, #56ab2f, transparent);
+            opacity: 0.3; pointer-events: none;
+        }
 
-        /* 顶部 */
+        /* ========== 顶部 ========== */
         .topbar {
-            position: relative; z-index: 10; padding: 14px 18px 10px;
+            position: relative; z-index: 20; padding: 14px 18px 10px;
             display: flex; align-items: center; justify-content: space-between;
-            background: linear-gradient(to bottom, var(--bg), transparent);
         }
         .back-btn {
             background: var(--card); border: 1px solid var(--border); border-radius: 10px;
@@ -41,436 +48,565 @@
             transition: all 0.2s;
         }
         .back-btn:hover { border-color: var(--accent); color: var(--accent); }
-        .stat-pill {
-            background: var(--card); border: 1px solid var(--border); border-radius: 20px;
-            padding: 5px 14px; font-size: 12px; font-weight: 700;
-            display: flex; align-items: center; gap: 7px;
-        }
-        .stat-num { font-size: 20px; font-weight: 800; color: var(--accent); }
-
-        /* 场景区域 */
-        .scene {
-            position: relative; z-index: 5;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: flex-end;
-            height: calc(100vh - 120px);
-            cursor: pointer;
+        .title {
+            font-size: 18px; font-weight: 800;
+            background: linear-gradient(90deg, #FF6B6B, #FFD93D, #6BCB77, #4D96FF);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        /* ========== 布布 ========== */
-        .bubudrap {
-            position: relative;
-            width: 260px; height: 300px;
+        /* ========== 场景 ========== */
+        .battle-scene {
+            position: relative; z-index: 10;
             display: flex; align-items: flex-end; justify-content: center;
+            height: calc(100vh - 130px);
+            cursor: pointer;
+            padding: 0 10px;
         }
 
-        /* 布布身体（狗） */
-        .dog-body {
-            position: absolute; bottom: 0;
-            width: 180px; height: 160px;
+        /* 布布容器 */
+        .bubu-side {
+            position: relative;
+            display: flex; flex-direction: column; align-items: center;
+            width: 45%;
         }
-        /* 狗头 */
-        .dog-head {
-            position: absolute; right: 10px; top: 20px;
-            width: 100px; height: 90px;
-            animation: headShake 0.1s ease-in-out;
-        }
-        @keyframes headShake {
-            0%,100% { transform: rotate(0); }
-            50%      { transform: rotate(-8deg); }
-        }
-        /* 狗屁股（被咬位置） */
-        .dog-butt {
-            position: absolute; left: 0; bottom: 0;
-            width: 100px; height: 100px;
-            transition: transform 0.05s;
-        }
-        .dog-butt.wiggle {
-            animation: buttWiggle 0.08s ease-in-out;
-        }
-        @keyframes buttWiggle {
-            0%,100% { transform: rotate(0deg) translateX(0); }
-            30%      { transform: rotate(-5deg) translateX(-4px); }
-            70%      { transform: rotate(5deg) translateX(4px); }
-        }
-        /* 咬痕 */
-        .bite-mark {
-            position: absolute; left: 15px; top: 25px;
-            width: 28px; height: 28px;
-            opacity: 0; transition: opacity 0.2s;
-            font-size: 22px;
-        }
-        .bite-mark.show { opacity: 1; }
-        /* 角色照片 */
-        .char-photo {
-            width: 100%; height: 100%;
-            object-fit: contain;
-            border-radius: 8px;
-        }
-
-        /* 布布叫声气泡 */
-        .bark-bubble {
-            position: absolute; right: -20px; top: 0;
-            background: #fff; border-radius: 20px;
-            padding: 8px 14px; font-size: 13px; font-weight: 700;
-            color: #333; white-space: nowrap;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-            opacity: 0; transform: scale(0.5) translateY(10px);
-            transition: all 0.15s ease-out;
-            pointer-events: none;
-            max-width: 180px; white-space: normal; text-align: center;
-        }
-        .bark-bubble.show {
-            opacity: 1; transform: scale(1) translateY(0);
-        }
-        .bark-bubble::after {
-            content: ''; position: absolute;
-            bottom: -8px; left: 30px;
-            border: 8px solid transparent; border-top-color: #fff; border-bottom: 0;
-        }
-
-        /* 痛苦表情 */
-        .pain-face {
-            position: absolute; right: 20px; top: 30px;
-            font-size: 28px; opacity: 0;
-            transition: opacity 0.1s;
-        }
-        .pain-face.show { opacity: 1; animation: painPop 0.3s ease-out; }
-        @keyframes painPop {
-            0%   { transform: scale(0.5) rotate(-10deg); }
-            60%  { transform: scale(1.3) rotate(5deg); }
-            100% { transform: scale(1) rotate(0); }
-        }
-
-        /* ========== 一二 ========== */
-        .yiyi {
-            position: absolute; left: 20px; bottom: 40px;
-            width: 100px; height: 130px;
+        /* 布布身体（屁股） */
+        .bubu-butt {
+            position: relative; width: 100%;
             transition: transform 0.06s;
         }
-        .yiyi.bite {
-            animation: biteMotion 0.12s ease-in-out;
+        .bubu-butt img {
+            width: 100%; height: 240px; object-fit: cover;
+            border-radius: 30px 30px 20px 20px;
+            border: 3px solid rgba(255,255,255,0.15);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
         }
-        @keyframes biteMotion {
+        .bubu-butt.hurt {
+            animation: buttHurt 0.15s ease-out;
+        }
+        @keyframes buttHurt {
+            0%,100% { transform: scale(1) rotate(0); }
+            40%      { transform: scale(0.92) rotate(-3deg); }
+            70%      { transform: scale(1.06) rotate(2deg); }
+        }
+
+        /* 咬痕叠加 */
+        .bite-layer {
+            position: absolute; inset: 0;
+            pointer-events: none; border-radius: 30px;
+            overflow: hidden;
+        }
+        .bite-spot {
+            position: absolute;
+            font-size: 28px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .bite-spot.pop { opacity: 1; animation: bitePop 0.3s ease-out; }
+        @keyframes bitePop {
+            0%   { transform: scale(0.2); }
+            60%  { transform: scale(1.4); }
+            100% { transform: scale(1); }
+        }
+
+        /* 布布的头（惨叫表情） */
+        .bubu-head {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid rgba(255,255,255,0.3);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+            margin-top: -20px;
+            margin-left: -10px;
+            position: absolute;
+            right: -10px; top: 10px;
+            z-index: 15;
+        }
+        .bubu-head img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .bubu-head .pain-overlay {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px;
+            opacity: 0; transition: opacity 0.1s;
+            background: rgba(0,0,0,0.3);
+            border-radius: 50%;
+        }
+        .bubu-head .pain-overlay.show { opacity: 1; }
+
+        /* 布布惨叫气泡 */
+        .cry-bubble {
+            position: absolute;
+            top: -30px; right: -20px;
+            background: #fff; border-radius: 16px;
+            padding: 6px 12px; font-size: 12px; font-weight: 700;
+            color: #333; white-space: nowrap;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+            opacity: 0; transform: scale(0.5) translateY(10px);
+            transition: all 0.15s ease-out;
+            z-index: 20;
+        }
+        .cry-bubble::after {
+            content: ''; position: absolute;
+            bottom: -7px; left: 25px;
+            border: 7px solid transparent; border-top-color: #fff; border-bottom: 0;
+        }
+        .cry-bubble.show { opacity: 1; transform: scale(1) translateY(0); }
+
+        /* 中间 VS */
+        .vs {
+            position: absolute; left: 50%; top: 40%;
+            transform: translate(-50%, -50%);
+            font-size: 28px; font-weight: 900;
+            color: #FFD93D; z-index: 5;
+            text-shadow: 0 0 20px rgba(255,217,61,0.5);
+            opacity: 0.4;
+        }
+
+        /* 一二容器 */
+        .yiyi-side {
+            position: relative;
+            width: 45%;
+            display: flex; flex-direction: column; align-items: flex-end;
+        }
+        /* 一二头像 */
+        .yiyi-head {
+            width: 80px; height: 80px;
+            border-radius: 50%; overflow: hidden;
+            border: 3px solid rgba(100,200,255,0.5);
+            box-shadow: 0 4px 20px rgba(100,200,255,0.4);
+            margin-bottom: -10px;
+        }
+        .yiyi-head img { width: 100%; height: 100%; object-fit: cover; }
+        /* 一二身体 */
+        .yiyi-body {
+            position: relative; width: 100%;
+        }
+        .yiyi-body img {
+            width: 100%; height: 240px; object-fit: cover;
+            border-radius: 20px 20px 30px 30px;
+            border: 3px solid rgba(100,200,255,0.2);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .yiyi-body.bite-anim {
+            animation: biteAnim 0.2s ease-in-out;
+        }
+        @keyframes biteAnim {
             0%   { transform: translateX(0) rotate(0); }
-            40%  { transform: translateX(40px) rotate(8deg); }
-            70%  { transform: translateX(35px) rotate(5deg); }
+            35%  { transform: translateX(30px) rotate(6deg); }
+            70%  { transform: translateX(20px) rotate(3deg); }
             100% { transform: translateX(0) rotate(0); }
         }
 
-        /* 牙印特效 */
-        .tooth-stars {
-            position: absolute; left: 40px; bottom: 80px;
-            font-size: 24px; opacity: 0;
-            pointer-events: none;
+        /* 一二怒气值 */
+        .anger-bar {
+            position: absolute; bottom: 10px; left: 10px;
+            background: rgba(0,0,0,0.5); border-radius: 10px;
+            padding: 3px 8px; font-size: 10px; font-weight: 700;
+            color: #FF6B6B;
         }
-        .tooth-stars.show {
-            animation: starPop 0.5s ease-out forwards;
-        }
-        @keyframes starPop {
-            0%   { opacity: 1; transform: scale(0.3) translateY(0); }
-            50%  { opacity: 1; transform: scale(1.5) translateY(-20px); }
-            100% { opacity: 0; transform: scale(1) translateY(-40px); }
+        .anger-fill {
+            height: 4px; background: linear-gradient(90deg, #FF6B6B, #FFD93D);
+            border-radius: 2px; transition: width 0.2s;
+            max-width: 60px;
         }
 
-        /* 屏幕震动 */
-        .scene.shake {
-            animation: sceneShake 0.12s ease-in-out;
+        /* ========== 特效 ========== */
+        /* 牙印飞溅 */
+        .tooth-burst {
+            position: absolute; pointer-events: none;
+            font-size: 20px; z-index: 50;
+            animation: toothBurst 0.6s ease-out forwards;
         }
-        @keyframes sceneShake {
-            0%,100% { transform: translateX(0); }
-            25%      { transform: translateX(-5px); }
-            75%      { transform: translateX(5px); }
-        }
-
-        /* 特效文字 */
-        .pow-text {
-            position: absolute; font-size: 32px; font-weight: 900;
-            pointer-events: none; z-index: 100;
-            animation: powFly 0.6s ease-out forwards;
-        }
-        @keyframes powFly {
-            0%   { transform: scale(0.4) translateY(0) rotate(0deg); opacity: 1; }
-            50%  { transform: scale(1.3) translateY(-30px) rotate(10deg); opacity: 1; }
-            100% { transform: scale(1) translateY(-80px) rotate(-5deg); opacity: 0; }
+        @keyframes toothBurst {
+            0%   { transform: translate(0,0) scale(0) rotate(0); opacity: 1; }
+            50%  { opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(1) rotate(var(--rot)); opacity: 0; }
         }
 
-        /* 连击大字 */
-        .combo-big {
-            position: fixed; pointer-events: none; z-index: 300;
-            font-size: 56px; font-weight: 900;
-            color: #FF6B35; text-shadow: 0 0 30px rgba(255,107,53,.7), 0 3px 0 #CC4A1A;
-            animation: comboBig 1s ease-out forwards;
+        /* POW大字 */
+        .pow-word {
+            position: absolute; pointer-events: none; z-index: 60;
+            font-size: 34px; font-weight: 900;
+            animation: powUp 0.55s ease-out forwards;
         }
-        @keyframes comboBig {
-            0%   { transform: translateX(-50%) scale(.2) translateY(0); opacity: 1; }
-            40%  { transform: translateX(-50%) scale(1.5) translateY(-30px); }
-            100% { transform: translateX(-50%) scale(1) translateY(-120px); opacity: 0; }
+        @keyframes powUp {
+            0%   { transform: scale(0.3) translateY(0) rotate(-5deg); opacity: 1; }
+            50%  { transform: scale(1.3) translateY(-25px) rotate(5deg); opacity: 1; }
+            100% { transform: scale(1) translateY(-70px) rotate(-3deg); opacity: 0; }
         }
 
-        /* 底部统计 */
+        /* 屏幕闪红 */
+        .hurt-flash {
+            position: fixed; inset: 0; pointer-events: none; z-index: 200;
+            background: radial-gradient(ellipse at 70% 60%, rgba(255,80,80,0.25), transparent 60%);
+            animation: hflash 0.18s ease-out forwards;
+        }
+        @keyframes hflash {
+            0%   { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* 连击大炸屏 */
+        .combo-blast {
+            position: fixed; left: 50%; top: 30%;
+            transform: translate(-50%, -50%);
+            font-size: 60px; font-weight: 900; z-index: 300;
+            color: #FFD93D;
+            text-shadow: 0 0 40px rgba(255,217,61,0.8), 0 4px 0 #CC8800;
+            animation: blastAnim 1.2s ease-out forwards;
+        }
+        @keyframes blastAnim {
+            0%   { transform: translate(-50%,-50%) scale(.1) rotate(-10deg); opacity: 1; }
+            30%  { transform: translate(-50%,-50%) scale(1.5) rotate(5deg); }
+            100% { transform: translate(-50%,-50%) scale(1) rotate(0deg) translateY(-120px); opacity: 0; }
+        }
+
+        /* 成就 */
+        .achieve-pop {
+            position: fixed; top: 80px; left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg,#1a1a2e,#16213e);
+            border: 1.5px solid #FFD93D; border-radius: 16px;
+            padding: 12px 24px; z-index: 400;
+            text-align: center; color: #fff;
+            box-shadow: 0 0 40px rgba(255,217,61,0.25);
+            animation: achIn .35s ease-out, achOut .4s ease-in 2.2s forwards;
+        }
+        @keyframes achIn  { from{transform:translateX(-50%) translateY(-25px);opacity:0} to{transform:translateX(-50%) translateY(0);opacity:1} }
+        @keyframes achOut { from{opacity:1} to{opacity:0;transform:translateX(-50%) translateY(-15px)} }
+
+        /* ========== 底部统计 ========== */
         .bbar {
-            position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
             background: linear-gradient(to top, var(--bg) 60%, transparent);
-            padding: 18px;
-            display: flex; justify-content: center; gap: 14px;
+            padding: 16px;
+            display: flex; justify-content: space-around;
         }
         .bstat {
             background: var(--card); border: 1px solid var(--border);
-            border-radius: 12px; padding: 8px 16px; text-align: center;
+            border-radius: 12px; padding: 8px 14px; text-align: center; min-width: 70px;
         }
         .bstat-val { font-size: 20px; font-weight: 800; color: var(--accent); }
-        .bstat-lbl { font-size: 11px; color: var(--text-2); margin-top: 2px; }
+        .bstat-lbl { font-size: 10px; color: var(--text-2); margin-top: 1px; }
 
-        /* 提示 */
-        .hint-label {
-            position: absolute; bottom: 20px;
-            font-size: 13px; color: var(--text-2);
-            animation: breathe 2s ease-in-out infinite;
+        /* 连击环 */
+        .combo-ring {
+            position: relative; width: 52px; height: 52px;
+            margin: 0 auto 4px;
         }
-        @keyframes breathe { 0%,100%{opacity:.4} 50%{opacity:1} }
+        .combo-ring svg {
+            transform: rotate(-90deg);
+        }
+        .combo-ring circle {
+            fill: none; stroke-width: 4;
+        }
+        .combo-ring .bg-ring { stroke: var(--border); }
+        .combo-ring .fg-ring {
+            stroke: var(--accent); stroke-dasharray: 138;
+            stroke-dashoffset: 138;
+            transition: stroke-dashoffset 0.3s;
+        }
+        .combo-ring .ring-num {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 800; color: var(--accent);
+        }
     </style>
 </head>
 <body>
 <div class="bg"></div>
+<div class="grass"></div>
 
 <!-- 顶部 -->
 <div class="topbar">
     <a href="/games" class="back-btn"><i class="fas fa-th"></i> 游戏中心</a>
-    <div class="stat-pill">
-        <i class="fas fa-bolt" style="color:#FF6B35"></i>
-        <span class="stat-num" id="comboEl">0</span>
-        <span style="color:var(--text-2);font-size:11px">连击</span>
+    <div class="title">🐉 × 🐕 咬屁屁大战</div>
+    <div style="width:80px"></div>
+</div>
+
+<!-- 战斗场景 -->
+<div class="battle-scene" id="battle">
+
+    <!-- 布布（左边，屁股） -->
+    <div class="bubu-side">
+        <!-- 惨叫气泡 -->
+        <div class="cry-bubble" id="cryBubble">呜呜呜！😭</div>
+        <!-- 布布屁股 -->
+        <div class="bubu-butt" id="bubuButt">
+            <img src="/assets/bubu.jpg" alt="布布">
+            <div class="bite-layer" id="biteLayer">
+                <div class="bite-spot" id="spot0" style="left:20%;top:30%">😵</div>
+                <div class="bite-spot" id="spot1" style="left:55%;top:20%">🩹</div>
+                <div class="bite-spot" id="spot2" style="left:35%;top:60%">😫</div>
+                <div class="bite-spot" id="spot3" style="left:60%;top:55%">💔</div>
+                <div class="bite-spot" id="spot4" style="left:15%;top:70%">😱</div>
+            </div>
+            <!-- 布布头像 -->
+            <div class="bubu-head">
+                <img src="/assets/bubu.jpg" alt="布布">
+                <div class="pain-overlay" id="painOverlay">😵</div>
+            </div>
+        </div>
     </div>
-    <div class="stat-pill">
-        <i class="fas fa-fire" style="color:#f85149"></i>
-        <span class="stat-num" id="maxEl">0</span>
-        <span style="color:var(--text-2);font-size:11px">最高</span>
+
+    <!-- VS -->
+    <div class="vs">⚔️</div>
+
+    <!-- 一二（右边） -->
+    <div class="yiyi-side">
+        <!-- 一二头像 -->
+        <div class="yiyi-head">
+            <img src="/assets/yiyi.jpg" alt="一二">
+        </div>
+        <!-- 一二身体 -->
+        <div class="yiyi-body" id="yiyiBody">
+            <img src="/assets/yiyi.jpg" alt="一二">
+            <div class="anger-bar">
+                <i class="fas fa-fire" style="color:#FF6B6B"></i>
+                <div class="anger-fill" id="angerFill" style="width:5px"></div>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- 场景 -->
-<div class="scene" id="scene">
-
-    <!-- 布布 -->
-    <div class="bubudrap" id="bubudrap">
-
-        <!-- 叫声气泡 -->
-        <div class="bark-bubble" id="barkBubble">呜呜呜！</div>
-
-        <!-- 痛苦表情 -->
-        <div class="pain-face" id="painFace">😵</div>
-
-        <!-- 狗屁股（被咬）-->
-        <div class="dog-butt" id="dogButt">
-            <img src="/assets/bubu.jpg" class="char-photo" alt="布布" style="border-radius:50% 50% 40% 40%;">
-            <!-- 咬痕 -->
-            <div class="bite-mark" id="bite1">🩹</div>
-            <div class="bite-mark" id="bite2">🩹</div>
-            <div class="bite-mark" id="bite3">🩹</div>
-        </div>
-
-        <!-- 狗头 -->
-        <div class="dog-head" id="dogHead">
-            <!-- 布布大头照 -->
-            <img src="/assets/bubu.jpg" class="char-photo" alt="布布">
-        </div>
-
-        <!-- 一二 -->
-        <div class="yiyi" id="yiyi">
-            <img src="/assets/yiyi.jpg" class="char-photo" alt="一二" style="width:90px;height:110px;object-fit:contain;">
-        </div>
-
-        <!-- 牙印星星 -->
-        <div class="tooth-stars" id="toothStars">⭐✨💥</div>
-
-    </div>
-
-    <!-- 提示 -->
-    <div class="hint-label">
-        <i class="fas fa-hand-pointer mr-1"></i>疯狂点击让一二咬布布！
-    </div>
-</div>
-
-<!-- 底部 -->
+<!-- 底部统计 -->
 <div class="bbar">
-    <div class="bstat"><div class="bstat-val" id="biteCount">0</div><div class="bstat-lbl">咬了</div></div>
-    <div class="bstat"><div class="bstat-val" id="cryCount">0</div><div class="bstat-lbl">惨叫</div></div>
-    <div class="bstat"><div class="bstat-val" id="cryLevel">0</div><div class="bstat-lbl">惨度</div></div>
+    <div class="bstat">
+        <div class="combo-ring" id="comboRing">
+            <svg width="52" height="52" viewBox="0 0 52 52">
+                <circle class="bg-ring" cx="26" cy="26" r="22"/>
+                <circle class="fg-ring" id="comboRingFg" cx="26" cy="26" r="22"/>
+            </svg>
+            <div class="ring-num" id="comboEl">0</div>
+        </div>
+        <div class="bstat-lbl">连击</div>
+    </div>
+    <div class="bstat">
+        <div class="bstat-val" id="biteEl">0</div>
+        <div class="bstat-lbl">咬了</div>
+    </div>
+    <div class="bstat">
+        <div class="bstat-val" id="cryEl">0</div>
+        <div class="bstat-lbl">惨叫</div>
+    </div>
+    <div class="bstat">
+        <div class="bstat-val" id="painEl" style="color:#FF6B6B">0</div>
+        <div class="bstat-lbl">痛苦值</div>
+    </div>
 </div>
+
+<div id="achieveBox"></div>
 
 <script>
-    // ========== 角色台词 ==========
-    const BARKS = [
-        '汪！痛痛痛！😵',
-        '呜呜呜不要咬了！😭',
-        '救命啊！！🆘',
-        '我的屁屁！！💥',
-        '一二你够了！😤',
-        '呜呜呜呜呜😭😭😭',
-        '救命！痛死了！😱',
-        '不要咬啦～🥺',
-        '好痛好痛好痛！💔',
-        '哇啊啊啊啊！！😖',
-        '主人救我！！🏃',
-        '我要报警了！！🚔',
-        '呜呜...🥺💔',
-        '痛痛痛痛痛！💢',
-        '咬轻点啊！！🥺',
-        '我的屁屁！！🩹',
-        '呜呜呜呜😭😭😭',
-        '好痛啊啊啊！😵‍💫',
-        '不要不要不要！🙅',
-        '救命啊！！😱🆘',
-        '痛！！😖😖😖',
-        '我错了还不行吗！🙏',
-        '咬咬咬！随便你！💢',
-    ];
+// ========== 台词 ==========
+const BARKS = [
+    '呜呜呜！😭', '痛痛痛！😵', '救命啊！！🆘',
+    '不要咬了！！🥺', '我的屁屁！！💔', '汪汪汪！！🐶',
+    '好痛啊啊啊！😖', '呜呜呜呜！😭😭', '救命！！😱',
+    '咬轻点！！🥺', '我要报警！🚔', '主人救我！！🏃',
+    '不要不要！🙅', '痛死了！！💢', '呜呜！！😫',
+    '好痛好痛！😵‍💫', '别咬啦！！🙏', '咬咬咬！💢',
+    '随便你！！😤', '救命啊！！🆘🆘',
+];
 
-    const POWS = ['💥','😵','🤯','💢','❗','🔥','⚡','👊'];
+const PAIN_FACES = ['😵','😫','😱','🤯','💔','😖','😭','😩'];
 
-    // ========== 状态 ==========
-    let combo = 0, maxCombo = 0;
-    let totalBites = 0;
-    let cryCount = 0;
-    let cryLevel = 0;
-    let lastTap = 0;
-    let biteCount = 0;
-    let timer = null;
-    let biteIdx = 0;
+// ========== 状态 ==========
+let combo = 0, maxCombo = 0;
+let totalBites = 0, cryCount = 0;
+let painLevel = 0;
+let lastTap = 0, biteSpots = 0;
+let timer = null;
+let angerTimer = null;
+let earned = new Set();
 
-    const scene      = document.getElementById('scene');
-    const yiyi       = document.getElementById('yiyi');
-    const dogButt    = document.getElementById('dogButt');
-    const dogHead    = document.getElementById('dogHead');
-    const bite1      = document.getElementById('bite1');
-    const bite2      = document.getElementById('bite2');
-    const bite3      = document.getElementById('bite3');
-    const toothStars = document.getElementById('toothStars');
-    const barkBubble = document.getElementById('barkBubble');
-    const painFace   = document.getElementById('painFace');
+// DOM
+const battle    = document.getElementById('battle');
+const bubuButt  = document.getElementById('bubuButt');
+const biteLayer = document.getElementById('biteLayer');
+const yiyiBody = document.getElementById('yiyiBody');
+const cryBubble = document.getElementById('cryBubble');
+const painOverlay = document.getElementById('painOverlay');
+const angerFill   = document.getElementById('angerFill');
+const comboEl     = document.getElementById('comboEl');
+const comboRingFg = document.getElementById('comboRingFg');
+const biteEl = document.getElementById('biteEl');
+const cryEl  = document.getElementById('cryEl');
+const painEl = document.getElementById('painEl');
 
-    // ========== 点击咬 ==========
-    scene.addEventListener('pointerdown', e => {
-        e.preventDefault();
-        totalBites++;
+// ========== 攻击 ==========
+battle.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    totalBites++;
 
-        const now = Date.now();
-        const gap = now - lastTap;
-        lastTap = now;
+    const now = Date.now();
+    const gap = now - lastTap;
+    lastTap = now;
 
-        // 连击
-        if (gap < 350) {
-            combo++;
-            if (combo > maxCombo) maxCombo = combo;
-            if (combo >= 8 && combo % 8 === 0) showComboBig(combo);
-        } else {
-            combo = Math.max(0, combo - 3);
+    // 连击
+    if (gap < 400) {
+        combo++;
+        if (combo > maxCombo) maxCombo = combo;
+        if (combo >= 5 && combo % 5 === 0) { showComboBlast(combo); checkAchieve(); }
+    } else {
+        combo = Math.max(0, combo - 4);
+    }
+    updateCombo();
+    clearTimeout(timer);
+    timer = setTimeout(() => { combo = 0; updateCombo(); }, 1200);
+
+    // ====== 咬动画 ======
+    // 一二扑过去
+    yiyiBody.classList.remove('bite-anim');
+    void yiyiBody.offsetWidth;
+    yiyiBody.classList.add('bite-anim');
+
+    // 布布屁股缩一下
+    bubuButt.classList.remove('hurt');
+    void bubuButt.offsetWidth;
+    bubuButt.classList.add('hurt');
+
+    // 咬痕叠加
+    if (combo >= 2) {
+        biteSpots = Math.min(5, biteSpots + 1);
+        const spot = document.getElementById('spot' + (biteSpots - 1));
+        if (spot) {
+            spot.classList.remove('pop');
+            void spot.offsetWidth;
+            spot.classList.add('pop');
         }
-        document.getElementById('comboEl').textContent = combo;
-        document.getElementById('maxEl').textContent = maxCombo;
+        // 惨叫
+        cryCount++;
+        showCry();
+        showPainFace();
+    }
 
-        clearTimeout(timer);
-        timer = setTimeout(() => { combo = 0; document.getElementById('comboEl').textContent = 0; }, 1000);
+    // 牙印特效
+    if (combo >= 3) spawnTooth();
+    // POW
+    spawnPow();
+    // 屏幕红闪
+    if (combo >= 4) doFlash();
+    // 怒气值
+    if (combo >= 6) {
+        clearTimeout(angerTimer);
+        angerFill.style.width = Math.min(60, 5 + combo * 5) + 'px';
+    }
 
-        // 一二咬
-        yiyi.classList.remove('bite');
-        void yiyi.offsetWidth;
-        yiyi.classList.add('bite');
+    // 痛苦值
+    painLevel = Math.min(999, Math.floor(totalBites * 1.5 + combo * 3));
+    updateStats();
+});
 
-        // 屁股抖动
-        dogButt.classList.remove('wiggle');
-        void dogButt.offsetWidth;
-        dogButt.classList.add('wiggle');
+// ========== 惨叫 ==========
+function showCry() {
+    const text = BARKS[Math.floor(Math.random() * BARKS.length)];
+    cryBubble.textContent = text;
+    cryBubble.classList.remove('show');
+    void cryBubble.offsetWidth;
+    cryBubble.classList.add('show');
+    setTimeout(() => cryBubble.classList.remove('show'), 1200);
+}
 
-        // 头抖
-        dogHead.classList.remove('headShake');
-        void dogHead.offsetWidth;
-        dogHead.classList.add('headShake');
+function showPainFace() {
+    const face = PAIN_FACES[Math.floor(Math.random() * PAIN_FACES.length)];
+    painOverlay.textContent = face;
+    painOverlay.classList.remove('show');
+    void painOverlay.offsetWidth;
+    painOverlay.classList.add('show');
+    setTimeout(() => painOverlay.classList.remove('show'), 600);
+}
 
-        // 咬痕叠加
-        biteIdx = (biteIdx % 3) + 1;
-        const biteEls = [bite1, bite2, bite3];
-        biteEls.forEach((b, i) => {
-            b.classList.toggle('show', i < biteIdx);
-        });
+// ========== 特效 ==========
+function spawnTooth() {
+    const chars = ['😵','💥','⚡','🩹','❗'];
+    const el = document.createElement('div');
+    el.className = 'tooth-burst';
+    el.textContent = chars[Math.floor(Math.random() * chars.length)];
+    el.style.left = (55 + Math.random() * 20) + '%';
+    el.style.top  = (30 + Math.random() * 30) + '%';
+    const tx = (Math.random() - 0.5) * 120;
+    const ty = (Math.random() - 0.5) * 120;
+    el.style.setProperty('--tx', tx + 'px');
+    el.style.setProperty('--ty', ty + 'px');
+    el.style.setProperty('--rot', (Math.random() * 720 - 360) + 'deg');
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 600);
+}
 
-        // 惨叫声
-        if (combo >= 2) {
-            cryCount++;
-            showBark();
+function spawnPow() {
+    const texts = combo >= 8 ? ['💥💥','🤯⚡','😵‍💫'] : ['💥','❗','👊','⚡'];
+    const colors = ['#FF6B6B','#FFD93D','#6BCB77','#FF8C00'];
+    const el = document.createElement('div');
+    el.className = 'pow-word';
+    el.textContent = texts[Math.floor(Math.random() * texts.length)];
+    el.style.left = (45 + Math.random() * 20) + '%';
+    el.style.top  = (20 + Math.random() * 30) + '%';
+    el.style.color = colors[Math.floor(Math.random() * colors.length)];
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 550);
+}
+
+function doFlash() {
+    const f = document.createElement('div');
+    f.className = 'hurt-flash';
+    document.body.appendChild(f);
+    setTimeout(() => f.remove(), 180);
+}
+
+function showComboBlast(n) {
+    const el = document.createElement('div');
+    el.className = 'combo-blast';
+    el.textContent = n + ' COMBO! 🔥';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1200);
+}
+
+// ========== 连击环 ==========
+function updateCombo() {
+    comboEl.textContent = combo;
+    // 环：138是周长，138*(1-combo/20) 最多绕一圈
+    const offset = Math.max(0, 138 * (1 - combo / 25));
+    comboRingFg.style.strokeDashoffset = offset;
+    comboRingFg.style.stroke = combo >= 10 ? '#FF6B6B' : combo >= 5 ? '#FFD93D' : '#58a6ff';
+}
+
+// ========== 统计 ==========
+function updateStats() {
+    biteEl.textContent = totalBites;
+    cryEl.textContent = cryCount;
+    painEl.textContent = painLevel;
+}
+
+// ========== 成就 ==========
+const ACHS = [
+    {id:'f1', label:'初次咬到 🐾', cond:()=>totalBites>=1},
+    {id:'c5', label:'5连击！⚡', cond:()=>maxCombo>=5},
+    {id:'c10',label:'10连击！💫', cond:()=>maxCombo>=10},
+    {id:'c20',label:'20连击！🔥', cond:()=>maxCombo>=20},
+    {id:'c30',label:'30连击！传说！🌟', cond:()=>maxCombo>=30},
+    {id:'p50',label:'痛苦值50 💔', cond:()=>painLevel>=50},
+    {id:'p200',label:'痛苦值200 💥', cond:()=>painLevel>=200},
+];
+function checkAchieve() {
+    ACHS.forEach(a => {
+        if (!earned.has(a.id) && a.cond()) {
+            earned.add(a.id);
+            showAchieve(a.label);
         }
-
-        // 牙印星星
-        if (combo >= 3) {
-            toothStars.classList.remove('show');
-            void toothStars.offsetWidth;
-            toothStars.classList.add('show');
-            setTimeout(() => toothStars.classList.remove('show'), 500);
-        }
-
-        // pow文字
-        spawnPow();
-
-        // 场景抖动（高连击）
-        if (combo >= 6) {
-            scene.classList.remove('shake');
-            void scene.offsetWidth;
-            scene.classList.add('shake');
-        }
-
-        // 惨度
-        cryLevel = Math.min(99, Math.floor(totalBites / 5));
-        updateStats();
     });
+}
+function showAchieve(label) {
+    const el = document.createElement('div');
+    el.className = 'achieve-pop';
+    el.innerHTML = `<div style="font-size:16px">🏆 成就解锁</div><div style="font-size:12px;margin-top:3px;color:#FFD93D">${label}</div>`;
+    document.getElementById('achieveBox').appendChild(el);
+    setTimeout(() => el.remove(), 2700);
+}
 
-    // ========== 显示叫声 ==========
-    function showBark() {
-        const text = BARKS[Math.floor(Math.random() * BARKS.length)];
-        barkBubble.textContent = text;
-        barkBubble.classList.remove('show');
-        void barkBubble.offsetWidth;
-        barkBubble.classList.add('show');
-        setTimeout(() => barkBubble.classList.remove('show'), 900);
-
-        // 痛苦表情
-        const faces = ['😵','😫','😱','🤯','💔','😖','😭'];
-        painFace.textContent = faces[Math.floor(Math.random() * faces.length)];
-        painFace.classList.remove('show');
-        void painFace.offsetWidth;
-        painFace.classList.add('show');
-        setTimeout(() => painFace.classList.remove('show'), 500);
-    }
-
-    // ========== POW特效 ==========
-    function spawnPow() {
-        const el = document.createElement('div');
-        el.className = 'pow-text';
-        const texts = combo >= 8 ? ['💥💥💥','😵‍💫','🤯⚡'] : ['💥','❗','👊'];
-        el.textContent = texts[Math.floor(Math.random() * texts.length)];
-        el.style.left = (25 + Math.random() * 50) + '%';
-        el.style.top  = (40 + Math.random() * 20) + '%';
-        document.body.appendChild(el);
-        setTimeout(() => el.remove(), 600);
-    }
-
-    // ========== 连击大字 ==========
-    function showComboBig(n) {
-        const el = document.createElement('div');
-        el.className = 'combo-big';
-        el.textContent = n + '连击! 🔥';
-        el.style.left = '50%';
-        el.style.top  = '30%';
-        document.body.appendChild(el);
-        setTimeout(() => el.remove(), 1000);
-    }
-
-    // ========== 更新统计 ==========
-    function updateStats() {
-        document.getElementById('biteCount').textContent = totalBites;
-        document.getElementById('cryCount').textContent = cryCount;
-        document.getElementById('cryLevel').textContent = cryLevel;
-    }
+updateCombo();
 </script>
 </body>
 </html>
