@@ -22,6 +22,7 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
         color TEXT DEFAULT '#4a9eff',
+        creator TEXT DEFAULT '匿名',
         completed INTEGER DEFAULT 0,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         completed_at TEXT
@@ -93,7 +94,7 @@ def get_tasks():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.execute('SELECT * FROM tasks ORDER BY created_at DESC')
+    c.execute('SELECT id, title, color, creator, completed, created_at, completed_at FROM tasks ORDER BY created_at DESC')
     tasks = [dict(row) for row in c.fetchall()]
     conn.close()
     return jsonify(tasks)
@@ -103,16 +104,17 @@ def create_task():
     data = request.json
     title = data.get('title', '').strip()
     color = data.get('color', '#4a9eff')
+    creator = data.get('creator', '匿名').strip() or '匿名'
     if not title:
         return jsonify({'error': '标题不能为空'}), 400
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute('INSERT INTO tasks (title, color) VALUES (?, ?)', (title, color))
+    c.execute('INSERT INTO tasks (title, color, creator) VALUES (?, ?, ?)', (title, color, creator))
     task_id = c.lastrowid
     conn.commit()
-    c.execute('SELECT id, title, color, completed, created_at, completed_at FROM tasks WHERE id=?', (task_id,))
+    c.execute('SELECT id, title, color, creator, completed, created_at, completed_at FROM tasks WHERE id=?', (task_id,))
     row = c.fetchone()
-    task = {'id':row[0],'title':row[1],'color':row[2],'completed':row[3],'created_at':row[4],'completed_at':row[5]}
+    task = {'id':row[0],'title':row[1],'color':row[2],'creator':row[3],'completed':row[4],'created_at':row[5],'completed_at':row[6]}
     conn.close()
     return jsonify(task), 201
 
@@ -130,9 +132,9 @@ def update_task(task_id):
     if 'title' in data:
         c.execute('UPDATE tasks SET title=? WHERE id=?', (data['title'], task_id))
     conn.commit()
-    c.execute('SELECT id, title, color, completed, created_at, completed_at FROM tasks WHERE id=?', (task_id,))
+    c.execute('SELECT id, title, color, creator, completed, created_at, completed_at FROM tasks WHERE id=?', (task_id,))
     row = c.fetchone()
-    task = {'id':row[0],'title':row[1],'color':row[2],'completed':row[3],'created_at':row[4],'completed_at':row[5]}
+    task = {'id':row[0],'title':row[1],'color':row[2],'creator':row[3],'completed':row[4],'created_at':row[5],'completed_at':row[6]}
     conn.close()
     return jsonify(task)
 

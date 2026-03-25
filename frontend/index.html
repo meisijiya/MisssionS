@@ -242,6 +242,13 @@
             <p class="ts mt-1" id="clock"></p>
         </div>
         <div class="flex items-center gap-3">
+            <!-- 用户名设置 -->
+            <div class="flex items-center gap-2">
+                <i class="fas fa-user ts" style="font-size:12px"></i>
+                <input type="text" id="username-input" class="input" placeholder="设置用户名"
+                    style="width:120px;padding:5px 10px;font-size:12px"
+                    onchange="savePrefs()">
+            </div>
             <!-- 主题切换 -->
             <button id="theme-btn" onclick="toggleTheme()" title="切换主题" style="background:none;border:none;cursor:pointer;color:var(--text-2);font-size:16px;padding:4px;">
                 <i class="fas fa-moon" id="theme-icon"></i>
@@ -342,9 +349,45 @@
 <script>
     // ========== 全局状态 ==========
     let selColor = '#58a6ff';
+    let myUsername = '匿名';
     let tasks = [];
-    let tickerNews = [];   // 滚动区：最新一批10条
-    let allNews = [];      // 全量页：7天全部
+    let tickerNews = [];   // 滚动区
+    let allNews = [];      // 全量页
+
+    // ========== 用户偏好（localStorage，30天过期） ==========
+    const PREFS_KEY = 'taskapp_prefs';
+    const EXPIRY_DAYS = 30;
+
+    function loadPrefs() {
+        try {
+            const raw = localStorage.getItem(PREFS_KEY);
+            if (!raw) return;
+            const prefs = JSON.parse(raw);
+            const expiry = new Date(prefs.expiry);
+            if (expiry < new Date()) {
+                localStorage.removeItem(PREFS_KEY);
+                return;
+            }
+            myUsername = prefs.username || '匿名';
+            selColor = prefs.color || '#58a6ff';
+        } catch(e) {}
+        // 回填UI
+        document.getElementById('username-input').value = myUsername;
+        document.getElementById('color-tip').textContent = selColor;
+        document.querySelectorAll('.color-dot').forEach(d => {
+            d.classList.toggle('sel', d.dataset.c === selColor);
+        });
+    }
+
+    function savePrefs() {
+        const prefs = {
+            username: document.getElementById('username-input').value.trim() || '匿名',
+            color: selColor,
+            expiry: new Date(Date.now() + EXPIRY_DAYS * 86400000).toISOString()
+        };
+        myUsername = prefs.username;
+        localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+    }
 
     // ========== 时钟 ==========
     function tick() {
@@ -354,6 +397,7 @@
         });
     }
     setInterval(tick, 1000); tick();
+    loadPrefs();
 
     // ========== 视图切换 ==========
     function switchView(v) {
@@ -405,6 +449,7 @@
                 </div>
                 <div class="flex items-center gap-4 mt-2">
                     <span class="ts"><i class="far fa-clock mr-1"></i>${fmt(t.created_at)}</span>
+                    <span class="ts" style="color:var(--purple)"><i class="fas fa-user mr-1"></i>${esc(t.creator||'匿名')}</span>
                     ${t.completed&&t.completed_at?`<span class="ts" style="color:var(--green)"><i class="fas fa-check-circle mr-1"></i>${fmt(t.completed_at)}</span>`:''}
                     <div class="flex gap-1.5 ml-auto">
                         ${['#58a6ff','#3fb950','#d29922','#f85149','#bc8cff','#db6d8b','#39c5cf'].map(c=>
@@ -422,7 +467,12 @@
     async function addTask() {
         const v = document.getElementById('task-input').value.trim();
         if (!v) return;
-        await fetch('/api/tasks', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({title:v, color:selColor})});
+        savePrefs(); // 刷新30天过期
+        await fetch('/api/tasks', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({title: v, color: selColor, creator: myUsername})
+        });
         document.getElementById('task-input').value = '';
         loadTasks();
     }
