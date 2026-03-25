@@ -7,254 +7,229 @@
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root, [data-theme="dark"] {
-            --bg: #0d1117;
-        }
-        [data-theme="light"] {
-            --bg: #f0f2f5;
-        }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; margin: 0; padding: 0; }
-        body {
-            background: var(--bg);
-            font-family: -apple-system, sans-serif;
-            min-height: 100vh; overflow: hidden;
-            transition: background 0.3s;
-            background: #0d1117;
-        }
+        body { background: #0d1117; font-family: -apple-system, sans-serif; min-height: 100vh; overflow: hidden; }
 
         /* ========== 顶部 ========== */
         .topbar {
             position: fixed; top: 0; left: 0; right: 0; z-index: 50;
             padding: 12px 16px 10px;
             display: flex; align-items: center; justify-content: space-between;
-            background: linear-gradient(to bottom, rgba(13,17,23,0.95), transparent);
+            background: linear-gradient(to bottom, rgba(13,17,23,0.98), transparent);
         }
         .back-btn {
             background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
             border-radius: 10px; color: #e6edf3; padding: 7px 13px; font-size: 12px;
             text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
         }
-        .title {
-            font-size: 17px; font-weight: 800; color: #FFD93D;
-            text-shadow: 0 0 20px rgba(255,217,61,0.4);
-        }
-        .cry-counter {
-            background: rgba(255,80,80,0.2); border: 1px solid rgba(255,80,80,0.4);
-            border-radius: 20px; padding: 5px 14px;
-            color: #FF6B6B; font-size: 13px; font-weight: 800;
+        .title { font-size: 16px; font-weight: 800; color: #FFD93D; letter-spacing: 1px; }
+        .cry-pill {
+            background: rgba(255,80,80,0.15); border: 1px solid rgba(255,80,80,0.35);
+            border-radius: 20px; padding: 5px 12px;
+            color: #FF6B6B; font-size: 12px; font-weight: 800;
             display: flex; align-items: center; gap: 5px;
         }
+
+        /* ========== 惨叫气泡 ========== */
+        .cry-bubble {
+            position: fixed; top: 65px; left: 50%; transform: translateX(-50%);
+            background: #fff; border-radius: 18px;
+            padding: 8px 16px; font-size: 14px; font-weight: 800;
+            color: #333; white-space: nowrap; z-index: 100;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+            opacity: 0; transition: opacity 0.12s, transform 0.12s;
+            transform: translateX(-50%) scale(0.75);
+        }
+        .cry-bubble::after {
+            content: ''; position: absolute; bottom: -7px; left: 50%; transform: translateX(-50%);
+            border: 7px solid transparent; border-top-color: #fff; border-bottom: 0;
+        }
+        .cry-bubble.show { opacity: 1; transform: translateX(-50%) scale(1); }
 
         /* ========== 场景 ========== */
         .scene {
             position: fixed; inset: 0; z-index: 10;
-            display: flex; align-items: center; justify-content: center;
+            display: flex; align-items: stretch;
             cursor: pointer;
+        }
+
+        /* 布布 — 左边，黑色大狗 */
+        .bubu-side {
+            flex: 1; position: relative;
             overflow: hidden;
-        }
-
-        /* 角色容器 */
-        .chars {
-            display: flex; align-items: flex-end; gap: 0;
-            height: 100vh; padding-bottom: 80px;
-        }
-
-        /* 布布 — 左边，咬人的 */
-        .bubu-wrap {
-            position: relative;
-            width: 50vw; height: 100%;
-            display: flex; flex-direction: column;
-            align-items: flex-end; justify-content: flex-end;
-            padding: 0 0 80px 0;
         }
         .bubu-photo {
-            width: 100%; height: 55vh;
-            object-fit: cover;
-            object-position: center;
-            border-radius: 30px 0 0 30px;
-            box-shadow: -4px 0 30px rgba(0,0,0,0.4);
-            transition: transform 0.08s;
+            width: 100%; height: 100%; object-fit: cover; object-position: center top;
+            display: block;
         }
-        .bubu-photo.bite {
-            animation: bubuBite 0.18s ease-in-out;
+        .bubu-side.bite-anim .bubu-photo {
+            animation: bubuBite 0.2s ease-in-out;
         }
         @keyframes bubuBite {
-            0%,100% { transform: translateX(0) rotate(0); }
-            45%      { transform: translateX(20px) rotate(3deg); }
-            75%      { transform: translateX(12px) rotate(1deg); }
+            0%,100% { transform: translateX(0); }
+            45%      { transform: translateX(25px); }
+            75%      { transform: translateX(12px); }
         }
 
-        /* 一二 — 右边，被咬的 */
-        .yiyi-wrap {
-            position: relative;
-            width: 50vw; height: 100%;
-            display: flex; flex-direction: column;
-            align-items: flex-start; justify-content: flex-end;
-            padding: 0 0 80px 0;
+        /* 一二 — 右边，小蓝机器人 */
+        .yiyi-side {
+            flex: 1; position: relative;
+            overflow: hidden;
         }
         .yiyi-photo {
-            width: 100%; height: 55vh;
-            object-fit: cover;
-            object-position: center;
-            border-radius: 0 30px 30px 0;
-            box-shadow: 4px 0 30px rgba(0,0,0,0.4);
-            transition: transform 0.08s;
+            width: 100%; height: 100%; object-fit: cover; object-position: center top;
+            display: block;
         }
-        .yiyi-photo.hurt {
-            animation: yiyiHurt 0.18s ease-out;
+        .yiyi-side.hurt-anim .yiyi-photo {
+            animation: yiyiHurt 0.2s ease-out;
         }
         @keyframes yiyiHurt {
-            0%,100% { transform: translateX(0); }
-            40%      { transform: translateX(-15px) rotate(-3deg) scale(0.97); }
-            70%      { transform: translateX(-5px) rotate(-1deg) scale(1.02); }
+            0%,100% { transform: translateX(0) scale(1); }
+            40%      { transform: translateX(-18px) scale(0.96); }
+            70%      { transform: translateX(-5px) scale(1.02); }
         }
 
-        /* 一二的大头像（被咬后的夸张表情） */
-        .yiyi-face {
-            position: absolute;
-            top: 60px; left: 50%; transform: translateX(-50%);
-            width: 28vw; height: 28vw; max-width: 120px; max-height: 120px;
-            border-radius: 50%;
-            overflow: hidden;
-            border: 3px solid rgba(255,80,80,0.6);
-            box-shadow: 0 0 30px rgba(255,80,80,0.4);
-            opacity: 0;
-            transition: opacity 0.15s;
-            z-index: 20;
+        /* 分割线 */
+        .divider {
+            position: absolute; left: 50%; top: 0; bottom: 0;
+            width: 2px; background: rgba(255,255,255,0.1);
+            transform: translateX(-50%); z-index: 5;
         }
-        .yiyi-face.show { opacity: 1; animation: faceSqueeze 0.2s ease-out; }
-        @keyframes faceSqueeze {
-            0%   { transform: translateX(-50%) scale(0.5); }
-            60%  { transform: translateX(-50%) scale(1.15); }
-            100% { transform: translateX(-50%) scale(1); }
-        }
-        .yiyi-face img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* 咬痕emoji叠加 */
+        /* 咬痕 — 在一二身上叠加 */
         .bite-marks {
-            position: absolute;
-            top: 50%; right: 0; transform: translateY(-50%);
+            position: absolute; right: 0; top: 35%;
             pointer-events: none; z-index: 15;
         }
-        .bite-mark {
-            position: absolute;
-            font-size: 28px;
-            opacity: 0;
+        .bite-marks .mark {
+            position: absolute; font-size: 26px; opacity: 0;
             transition: opacity 0.15s;
         }
-        .bite-mark.pop { opacity: 1; animation: markPop 0.3s ease-out; }
+        .bite-marks .mark.pop { opacity: 1; animation: markPop 0.3s ease-out; }
         @keyframes markPop {
-            0%   { transform: scale(0.2); }
-            60%  { transform: scale(1.3); }
-            100% { transform: scale(1); }
+            0%   { transform: scale(0.2) rotate(-10deg); }
+            60%  { transform: scale(1.3) rotate(5deg); }
+            100% { transform: scale(1) rotate(0); }
         }
 
-        /* 惨叫声气泡 */
-        .cry-bubble {
-            position: fixed;
-            top: 70px; left: 50%; transform: translateX(-50%);
-            background: #fff; border-radius: 20px;
-            padding: 8px 16px; font-size: 15px; font-weight: 800;
-            color: #333; white-space: nowrap;
-            box-shadow: 0 6px 24px rgba(0,0,0,0.3);
-            opacity: 0; z-index: 100;
-            transition: opacity 0.12s, transform 0.12s;
-            transform: translateX(-50%) scale(0.7);
+        /* 一二的惨脸 */
+        .hurt-face {
+            position: absolute; left: 50%; top: 30%;
+            transform: translate(-50%, -50%);
+            width: 24vw; height: 24vw; max-width: 110px; max-height: 110px;
+            border-radius: 50%; overflow: hidden;
+            border: 3px solid rgba(255,80,80,0.7);
+            box-shadow: 0 0 30px rgba(255,80,80,0.5);
+            opacity: 0; z-index: 20;
         }
-        .cry-bubble::after {
-            content: ''; position: absolute;
-            bottom: -8px; left: 50%; transform: translateX(-50%);
-            border: 8px solid transparent; border-top-color: #fff; border-bottom: 0;
-        }
-        .cry-bubble.show {
-            opacity: 1; transform: translateX(-50%) scale(1);
+        .hurt-face img { width: 100%; height: 100%; object-fit: cover; }
+        .hurt-face.show { opacity: 1; animation: facePop 0.2s ease-out; }
+        @keyframes facePop {
+            0%   { transform: translate(-50%,-50%) scale(0.4); }
+            65%  { transform: translate(-50%,-50%) scale(1.2); }
+            100% { transform: translate(-50%,-50%) scale(1); }
         }
 
-        /* 特效：牙印飞溅 */
-        .tooth-splash {
-            position: fixed; pointer-events: none; z-index: 80;
-            font-size: 24px;
-            animation: splashFly 0.7s ease-out forwards;
+        /* 角色名字标签 */
+        .name-tag {
+            position: absolute; bottom: 90px;
+            font-size: 13px; font-weight: 800;
+            padding: 4px 12px; border-radius: 20px;
+            z-index: 20;
         }
-        @keyframes splashFly {
-            0%   { transform: translate(0,0) scale(0.5) rotate(0); opacity: 1; }
+        .bubu-side .name-tag {
+            left: 10px;
+            background: rgba(0,0,0,0.6); color: #fff;
+        }
+        .yiyi-side .name-tag {
+            right: 10px;
+            background: rgba(100,200,255,0.25); color: #4fc3f7;
+            backdrop-filter: blur(4px);
+        }
+
+        /* 特效粒子 */
+        .splash {
+            position: absolute; font-size: 22px;
+            pointer-events: none; z-index: 60;
+            animation: splashAnim 0.7s ease-out forwards;
+        }
+        @keyframes splashAnim {
+            0%   { transform: translate(0,0) scale(0.3) rotate(0); opacity: 1; }
             100% { transform: translate(var(--tx),var(--ty)) scale(1) rotate(var(--rot)); opacity: 0; }
         }
 
-        /* 特效：POW */
-        .pow-big {
-            position: fixed; pointer-events: none; z-index: 90;
-            font-size: 40px; font-weight: 900;
-            animation: powUp 0.6s ease-out forwards;
+        /* POW大字 */
+        .pow {
+            position: absolute; font-size: 38px; font-weight: 900;
+            pointer-events: none; z-index: 80;
+            animation: powAnim 0.6s ease-out forwards;
         }
-        @keyframes powUp {
+        @keyframes powAnim {
             0%   { transform: scale(0.2) translateY(0) rotate(-5deg); opacity: 1; }
-            40%  { transform: scale(1.4) translateY(-30px) rotate(5deg); opacity: 1; }
+            45%  { transform: scale(1.4) translateY(-25px) rotate(5deg); opacity: 1; }
             100% { transform: scale(1) translateY(-80px) rotate(-3deg); opacity: 0; }
         }
 
-        /* 屏幕闪红 */
-        .hurt-splash {
+        /* 屏幕红闪 */
+        .red-flash {
             position: fixed; inset: 0; pointer-events: none; z-index: 200;
-            background: radial-gradient(ellipse at 50% 50%, rgba(255,60,60,0.2), transparent 70%);
-            animation: splashRed 0.2s ease-out forwards;
+            background: radial-gradient(ellipse at 50% 50%, rgba(255,50,50,0.18), transparent 70%);
+            animation: redFlash 0.2s ease-out forwards;
         }
-        @keyframes splashRed {
+        @keyframes redFlash {
             0%   { opacity: 1; }
             100% { opacity: 0; }
         }
 
-        /* 连击大字 */
-        .combo-text {
-            position: fixed; left: 50%; top: 40%;
-            transform: translate(-50%, -50%);
-            font-size: 64px; font-weight: 900; z-index: 300;
+        /* COMBO大字 */
+        .combo-big {
+            position: fixed; left: 50%; top: 38%;
+            transform: translate(-50%,-50%);
+            font-size: 68px; font-weight: 900; z-index: 300;
             color: #FFD93D;
-            text-shadow: 0 0 50px rgba(255,217,61,0.9), 0 4px 0 #CC8800;
-            animation: comboBig 1.3s ease-out forwards;
+            text-shadow: 0 0 60px rgba(255,217,61,0.9), 0 4px 0 #CC8800;
+            animation: comboBig 1.4s ease-out forwards;
         }
         @keyframes comboBig {
             0%   { transform: translate(-50%,-50%) scale(0.1) rotate(-15deg); opacity: 1; }
-            25%  { transform: translate(-50%,-50%) scale(1.6) rotate(5deg); opacity: 1; }
-            100% { transform: translate(-50%,-50%) scale(1) rotate(0deg) translateY(-140px); opacity: 0; }
+            28%  { transform: translate(-50%,-50%) scale(1.65) rotate(5deg); opacity: 1; }
+            100% { transform: translate(-50%,-50%) scale(1) rotate(0deg) translateY(-150px); opacity: 0; }
         }
 
         /* 成就 */
         .achieve {
-            position: fixed; top: 70px; left: 50%;
-            transform: translateX(-50%);
+            position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
             background: linear-gradient(135deg,#1a1a2e,#16213e);
             border: 1.5px solid #FFD93D; border-radius: 16px;
-            padding: 12px 24px; z-index: 400;
-            color: #fff; text-align: center;
+            padding: 12px 24px; z-index: 400; color: #fff; text-align: center;
             box-shadow: 0 0 40px rgba(255,217,61,0.2);
             animation: achIn .35s ease-out, achOut .4s ease-in 2.3s forwards;
         }
         @keyframes achIn  { from{transform:translateX(-50%) translateY(-20px);opacity:0} to{transform:translateX(-50%) translateY(0);opacity:1} }
         @keyframes achOut { from{opacity:1} to{opacity:0;transform:translateX(-50%) translateY(-15px)} }
 
-        /* ========== 底部状态栏 ========== */
+        /* 底部状态栏 */
         .bbar {
             position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
-            background: linear-gradient(to top, rgba(13,17,23,0.95) 50%, transparent);
-            padding: 14px 16px 20px;
+            background: linear-gradient(to top, rgba(13,17,23,0.97) 50%, transparent);
+            padding: 14px 12px 18px;
             display: flex; justify-content: space-around;
         }
         .bstat {
             background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px; padding: 8px 14px; text-align: center; min-width: 72px;
+            border-radius: 12px; padding: 8px 12px; text-align: center; min-width: 68px;
         }
         .bstat-num { font-size: 22px; font-weight: 900; color: #58a6ff; }
-        .bstat-lbl { font-size: 10px; color: rgba(230,237,243,0.4); margin-top: 1px; }
+        .bstat-lbl { font-size: 10px; color: rgba(230,237,243,0.35); margin-top: 1px; }
 
         /* 提示 */
         .hint {
-            position: fixed; bottom: 90px; left: 0; right: 0; text-align: center;
-            font-size: 13px; color: rgba(230,237,243,0.3);
+            position: fixed; bottom: 95px; left: 0; right: 0;
+            text-align: center; font-size: 12px;
+            color: rgba(230,237,243,0.25); z-index: 50;
             animation: breathe 2.5s ease-in-out infinite;
-            z-index: 50;
         }
-        @keyframes breathe { 0%,100%{opacity:.25} 50%{opacity:.6} }
+        @keyframes breathe { 0%,100%{opacity:.2} 50%{opacity:.55} }
     </style>
 </head>
 <body>
@@ -262,11 +237,8 @@
 <!-- 顶部 -->
 <div class="topbar">
     <a href="/games" class="back-btn"><i class="fas fa-th"></i> 游戏中心</a>
-    <div class="title">🐕 咬屁屁大战 🐉</div>
-    <div class="cry-counter">
-        <i class="fas fa-volume-up"></i>
-        <span id="cryEl">0</span>
-    </div>
+    <div class="title">🐕 × 🤖 咬屁屁大战</div>
+    <div class="cry-pill"><i class="fas fa-volume-up"></i> <span id="cryEl">0</span></div>
 </div>
 
 <!-- 惨叫气泡 -->
@@ -275,36 +247,34 @@
 <!-- 主场景 -->
 <div class="scene" id="scene">
 
-    <div class="chars">
+    <!-- 分割线 -->
+    <div class="divider"></div>
 
-        <!-- 布布（左边，咬人的） -->
-        <div class="bubu-wrap">
-            <img src="/assets/bubu.jpg" class="bubu-photo" id="bubuPhoto" alt="布布">
+    <!-- 布布 — 左边，黑色大狗，咬人的 -->
+    <div class="bubu-side" id="bubuSide">
+        <img src="/assets/bubu-black.jpg" class="bubu-photo" alt="布布">
+        <div class="name-tag">🐕 布布</div>
+    </div>
+
+    <!-- 一二 — 右边，小蓝机器人，被咬的 -->
+    <div class="yiyi-side" id="yiyiSide">
+        <img src="/assets/yiyi.jpg" class="yiyi-photo" alt="一二">
+        <!-- 咬痕 -->
+        <div class="bite-marks">
+            <div class="mark" id="m1" style="right:-8px;top:-15px">😵</div>
+            <div class="mark" id="m2" style="right:-18px;top:25px">🩹</div>
+            <div class="mark" id="m3" style="right:-10px;top:65px">💔</div>
         </div>
-
-        <!-- 一二（右边，被咬的） -->
-        <div class="yiyi-wrap">
-            <!-- 被咬的大头像 -->
-            <div class="yiyi-face" id="yiyiFace">
-                <img src="/assets/yiyi.jpg" alt="一二">
-            </div>
-            <!-- 咬痕 -->
-            <div class="bite-marks">
-                <div class="bite-mark" id="m1" style="right:-5px;top:-10px">😵</div>
-                <div class="bite-mark" id="m2" style="right:-15px;top:30px">🩹</div>
-                <div class="bite-mark" id="m3" style="right:-8px;top:70px">💔</div>
-            </div>
-            <!-- 一二全身照 -->
-            <img src="/assets/yiyi.jpg" class="yiyi-photo" id="yiyiPhoto" alt="一二">
+        <!-- 惨脸 -->
+        <div class="hurt-face" id="hurtFace">
+            <img src="/assets/yiyi.jpg" alt="一二">
         </div>
-
+        <div class="name-tag">🤖 一二</div>
     </div>
 </div>
 
 <!-- 提示 -->
-<div class="hint">
-    <i class="fas fa-hand-pointer"></i> 点击屏幕让布布咬一二！
-</div>
+<div class="hint"><i class="fas fa-hand-pointer"></i> 点击屏幕让布布咬一二！</div>
 
 <!-- 底部 -->
 <div class="bbar">
@@ -322,60 +292,47 @@
     </div>
     <div class="bstat">
         <div class="bstat-num" id="maxEl">0</div>
-        <div class="bstat-lbl">最高连击</div>
+        <div class="bstat-lbl">最高</div>
     </div>
 </div>
 
 <div id="achieveBox"></div>
 
 <script>
-// ========== 台词 ==========
 const CRY = [
-    '呜呜呜！😭','救命啊！！🆘','好痛啊啊啊！😵',
-    '痛痛痛！！💔','不要咬了！！🥺','呜呜！！😫',
-    '我的屁屁！！💥','救命！！😱','呜呜呜呜！😭😭',
-    '咬轻点！！🥺','主人救我！！🏃','我要报警！🚔',
-    '不要不要！🙅','痛死了！！💢','好痛好痛！😖',
-    '别咬啦！！🙏','随便你！！😤','救命啊！！🆘🆘',
-    '呜呜呜！🥺','痛！！😵‍💫','救命！！😭😭',
-    '布布别咬了！！😵','好痛！！💥💥','呜呜！！😱',
+    '呜呜呜！😭','救命啊！！🆘','好痛啊啊啊！😵','痛痛痛！！💔',
+    '不要咬了！！🥺','呜呜！！😫','我的屁屁！！💥','救命！！😱',
+    '呜呜呜呜！😭😭','咬轻点！！🥺','主人救我！！🏃','我要报警！🚔',
+    '不要不要！🙅','痛死了！！💢','好痛好痛！😖','别咬啦！！🙏',
+    '随便你！！😤','救命啊！！🆘🆘','呜呜呜！🥺','痛！！😵‍💫',
+    '布布别咬了！！😵','好痛！！💥💥','呜呜！！😱','救命！！😭😭',
 ];
 
-const PAIN_FACE = ['😵','😫','😱','🤯','💔','😖','😭','😩'];
-
-// ========== 状态 ==========
-let combo = 0, maxCombo = 0;
-let totalBites = 0, cryCount = 0;
-let hurtLevel = 0;
-let lastTap = 0, biteSpot = 0;
-let timer = null;
-let earned = new Set();
-
-// DOM
-const scene    = document.getElementById('scene');
-const bubuPhoto = document.getElementById('bubuPhoto');
-const yiyiPhoto = document.getElementById('yiyiPhoto');
-const yiyiFace  = document.getElementById('yiyiFace');
-const cryBubble = document.getElementById('cryBubble');
 const m1 = document.getElementById('m1');
 const m2 = document.getElementById('m2');
 const m3 = document.getElementById('m3');
+const hurtFace = document.getElementById('hurtFace');
+const cryBubble = document.getElementById('cryBubble');
+const bubuSide = document.getElementById('bubuSide');
+const yiyiSide = document.getElementById('yiyiSide');
 const comboEl  = document.getElementById('comboEl');
 const biteEl   = document.getElementById('biteEl');
 const cryEl    = document.getElementById('cryEl');
 const hurtEl   = document.getElementById('hurtEl');
 const maxEl    = document.getElementById('maxEl');
+const scene    = document.getElementById('scene');
 
-// ========== 攻击 ==========
+let combo = 0, maxCombo = 0, totalBites = 0, cryCount = 0, hurtLevel = 0;
+let lastTap = 0, markIdx = 0, timer = null, earned = new Set();
+
+// 攻击
 scene.addEventListener('pointerdown', e => {
     e.preventDefault();
     totalBites++;
 
-    const now = Date.now();
-    const gap = now - lastTap;
-    lastTap = now;
+    const gap = Date.now() - lastTap;
+    lastTap = Date.now();
 
-    // 连击
     if (gap < 450) {
         combo++;
         if (combo > maxCombo) maxCombo = combo;
@@ -387,70 +344,61 @@ scene.addEventListener('pointerdown', e => {
         combo = Math.max(0, combo - 5);
     }
     comboEl.textContent = combo;
-    maxEl.textContent  = maxCombo;
-
+    maxEl.textContent = maxCombo;
     clearTimeout(timer);
     timer = setTimeout(() => { combo = 0; comboEl.textContent = 0; }, 1500);
 
-    // ===== 动画 =====
-    // 布布扑过去咬
-    bubuPhoto.classList.remove('bite');
-    void bubuPhoto.offsetWidth;
-    bubuPhoto.classList.add('bite');
+    // 布布咬
+    bubuSide.classList.remove('bite-anim');
+    void bubuSide.offsetWidth;
+    bubuSide.classList.add('bite-anim');
 
-    // 一二被咬缩
-    yiyiPhoto.classList.remove('hurt');
-    void yiyiPhoto.offsetWidth;
-    yiyiPhoto.classList.add('hurt');
+    // 一二被咬
+    yiyiSide.classList.remove('hurt-anim');
+    void yiyiSide.offsetWidth;
+    yiyiSide.classList.add('hurt-anim');
 
-    // 大头像
-    yiyiFace.classList.remove('show');
-    void yiyiFace.offsetWidth;
-    yiyiFace.classList.add('show');
-    setTimeout(() => yiyiFace.classList.remove('show'), 800);
+    // 惨脸
+    hurtFace.classList.remove('show');
+    void hurtFace.offsetWidth;
+    hurtFace.classList.add('show');
+    setTimeout(() => hurtFace.classList.remove('show'), 900);
 
     // 咬痕
     if (combo >= 2) {
-        biteSpot = (biteSpot % 3) + 1;
-        [m1,m2,m3].forEach((m, i) => {
-            m.classList.toggle('pop', i < biteSpot);
-        });
-        // 惨叫
+        markIdx = (markIdx % 3) + 1;
+        [m1,m2,m3].forEach((m, i) => m.classList.toggle('pop', i < markIdx));
         cryCount++;
         showCry();
-        // 痛苦值
         hurtLevel += combo + 1;
         updateStats();
     }
 
-    // 特效
-    if (combo >= 3) spawnTooth();
+    if (combo >= 3) spawnSplash();
     spawnPow();
     if (combo >= 5) doFlash();
 });
 
-// ========== 惨叫 ==========
 function showCry() {
     cryEl.textContent = cryCount;
-    const text = CRY[Math.floor(Math.random() * CRY.length)];
-    cryBubble.textContent = text;
+    const t = CRY[Math.floor(Math.random() * CRY.length)];
+    cryBubble.textContent = t;
     cryBubble.classList.remove('show');
     void cryBubble.offsetWidth;
     cryBubble.classList.add('show');
     setTimeout(() => cryBubble.classList.remove('show'), 1500);
 }
 
-// ========== 特效 ==========
-function spawnTooth() {
-    const chars = ['😵','💥','🩹','⚡','❗'];
-    for (let i = 0; i < 4; i++) {
+function spawnSplash() {
+    const ch = ['😵','💥','🩹','⚡','❗'];
+    for (let i = 0; i < 5; i++) {
         const el = document.createElement('div');
-        el.className = 'tooth-splash';
-        el.textContent = chars[Math.floor(Math.random() * chars.length)];
-        el.style.left = (50 + Math.random() * 10) + '%';
-        el.style.top  = (35 + Math.random() * 20) + '%';
-        const tx = (Math.random() - 0.5) * 150;
-        const ty = (Math.random() - 0.5) * 150;
+        el.className = 'splash';
+        el.textContent = ch[Math.floor(Math.random() * ch.length)];
+        el.style.left = (45 + Math.random() * 10) + '%';
+        el.style.top  = (30 + Math.random() * 25) + '%';
+        const tx = (Math.random() - 0.5) * 160;
+        const ty = (Math.random() - 0.5) * 160;
         el.style.setProperty('--tx', tx + 'px');
         el.style.setProperty('--ty', ty + 'px');
         el.style.setProperty('--rot', (Math.random() * 720 - 360) + 'deg');
@@ -461,47 +409,45 @@ function spawnTooth() {
 
 function spawnPow() {
     const texts = combo >= 10 ? ['💥💥','🤯⚡'] : combo >= 5 ? ['💥','❗','👊'] : ['💥'];
-    const colors = ['#FF6B6B','#FFD93D','#FF8C00','#f85149'];
+    const cols  = ['#FF6B6B','#FFD93D','#FF8C00','#f85149'];
     const el = document.createElement('div');
-    el.className = 'pow-big';
+    el.className = 'pow';
     el.textContent = texts[Math.floor(Math.random() * texts.length)];
     el.style.left = (35 + Math.random() * 30) + '%';
-    el.style.top  = (30 + Math.random() * 20) + '%';
-    el.style.color = colors[Math.floor(Math.random() * colors.length)];
+    el.style.top  = (25 + Math.random() * 20) + '%';
+    el.style.color = cols[Math.floor(Math.random() * cols.length)];
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 600);
 }
 
 function doFlash() {
     const f = document.createElement('div');
-    f.className = 'hurt-splash';
+    f.className = 'red-flash';
     document.body.appendChild(f);
     setTimeout(() => f.remove(), 200);
 }
 
 function showCombo(n) {
     const el = document.createElement('div');
-    el.className = 'combo-text';
+    el.className = 'combo-big';
     el.textContent = n + ' COMBO! 🔥';
     document.body.appendChild(el);
-    setTimeout(() => el.remove(), 1300);
+    setTimeout(() => el.remove(), 1400);
 }
 
-// ========== 统计 ==========
 function updateStats() {
     biteEl.textContent = totalBites;
     hurtEl.textContent = hurtLevel;
 }
 
-// ========== 成就 ==========
 const ACHS = [
-    {id:'f1',  label:'初次咬到 🐾', cond:()=>totalBites>=1},
-    {id:'c5',  label:'5连击！⚡', cond:()=>maxCombo>=5},
-    {id:'c10', label:'10连击！💫', cond:()=>maxCombo>=10},
-    {id:'c15', label:'15连击！🔥', cond:()=>maxCombo>=15},
-    {id:'c20', label:'20连击！💥', cond:()=>maxCombo>=20},
-    {id:'p100',label:'痛苦值100 💔', cond:()=>hurtLevel>=100},
-    {id:'p500',label:'痛苦值500 💀', cond:()=>hurtLevel>=500},
+    {id:'f1',  label:'初次咬到 🐾',   cond:()=>totalBites>=1},
+    {id:'c5',  label:'5连击！⚡',    cond:()=>maxCombo>=5},
+    {id:'c10', label:'10连击！💫',   cond:()=>maxCombo>=10},
+    {id:'c15', label:'15连击！🔥',   cond:()=>maxCombo>=15},
+    {id:'c20', label:'20连击！💥',   cond:()=>maxCombo>=20},
+    {id:'p100',label:'痛苦值100 💔',  cond:()=>hurtLevel>=100},
+    {id:'p500',label:'痛苦值500 💀',  cond:()=>hurtLevel>=500},
 ];
 function checkAchieve() {
     ACHS.forEach(a => {
