@@ -423,6 +423,7 @@
         el.classList.add('sel');
         selColor = el.dataset.c;
         document.getElementById('color-tip').textContent = selColor;
+        savePrefs(); // 记住颜色
     }
 
     // ========== 加载任务 ==========
