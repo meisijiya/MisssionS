@@ -188,11 +188,11 @@ def daily_reset():
 
 def init_scheduler():
     scheduler = BackgroundScheduler(timezone='Asia/Shanghai')
-    scheduler.add_job(daily_reset, 'cron', hour=3, minute=0, id='daily_reset')
-    scheduler.add_job(fetch_news, 'cron', hour=8, minute=0, id='news_8')
+    scheduler.add_job(daily_reset, 'cron', hour=3, minute=0, id='daily_reset', timezone='Asia/Shanghai')
+    scheduler.add_job(fetch_news, 'cron', hour=8, minute=0, id='news_8', timezone='Asia/Shanghai')
     fetch_news()  # 启动时抓一次
     scheduler.start()
-    print("[Scheduler] 启动 | 任务清空:03:00 | 新闻抓取:08:00")
+    print("[Scheduler] 启动 | 任务清空:03:00 | 新闻抓取:08:00 (Asia/Shanghai)")
 
 @app.route('/')
 def index():

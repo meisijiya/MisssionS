@@ -76,6 +76,7 @@
             display: flex;
             gap: 48px;
             white-space: nowrap;
+            overflow: hidden;
             padding: 11px 0 11px 72px;
             animation: ticker 40s linear infinite;
         }
@@ -88,6 +89,7 @@
             font-size: 12px;
             cursor: pointer;
             transition: color 0.2s;
+            flex-shrink: 0;
         }
         .news-item:hover { color: var(--blue); }
         .news-src {
@@ -96,6 +98,7 @@
             color: var(--text-3);
             padding: 2px 6px;
             border-radius: 8px;
+            flex-shrink: 0;
         }
         @keyframes ticker {
             0%   { transform: translateX(0); }
@@ -234,25 +237,30 @@
 <div class="max-w-3xl mx-auto px-4 py-6">
 
     <!-- 顶部：标题 + 视图切换 + 主题 -->
-    <div class="flex items-center justify-between mb-6">
-        <div>
+    <!-- 桌面：一行 | 移动：两行 -->
+    <div class="mb-6">
+        <!-- 第一行：标题 + 时钟 + 主题切换 -->
+        <div class="flex items-center justify-between mb-3">
             <h1 class="text-xl font-bold">
                 <i class="fas fa-layer-group mr-2" style="color:var(--blue)"></i>任务中心
             </h1>
-            <p class="ts mt-1" id="clock"></p>
+            <div class="flex items-center gap-3">
+                <p class="ts" id="clock"></p>
+                <button id="theme-btn" onclick="toggleTheme()" title="切换主题" style="background:none;border:none;cursor:pointer;color:var(--text-2);font-size:16px;padding:4px;">
+                    <i class="fas fa-moon" id="theme-icon"></i>
+                </button>
+            </div>
         </div>
-        <div class="flex items-center gap-3">
-            <!-- 用户名设置 -->
+        <!-- 第二行：用户名 + 视图切换（移动端才折行） -->
+        <div class="flex items-center justify-between flex-wrap gap-2">
+            <!-- 用户名 -->
             <div class="flex items-center gap-2">
                 <i class="fas fa-user ts" style="font-size:12px"></i>
                 <input type="text" id="username-input" class="input" placeholder="设置用户名"
-                    style="width:120px;padding:5px 10px;font-size:12px"
+                    style="width:110px;padding:4px 10px;font-size:12px"
                     onchange="savePrefs()">
             </div>
-            <!-- 主题切换 -->
-            <button id="theme-btn" onclick="toggleTheme()" title="切换主题" style="background:none;border:none;cursor:pointer;color:var(--text-2);font-size:16px;padding:4px;">
-                <i class="fas fa-moon" id="theme-icon"></i>
-            </button>
+            <!-- 视图切换 -->
             <div class="flex gap-2">
                 <button class="nav-btn active" id="tab-task" onclick="switchView('task')">
                     <i class="fas fa-check-square mr-1"></i>任务
