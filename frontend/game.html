@@ -9,44 +9,27 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root, [data-theme="dark"] {
-            --bg: #0d1117;
-            --card: #161b22;
-            --border: #30363d;
-            --text: #e6edf3;
-            --text-2: #8b949e;
-            --accent: #58a6ff;
+            --bg: #0d1117; --card: #161b22; --border: #30363d;
+            --text: #e6edf3; --text-2: #8b949e; --accent: #58a6ff;
         }
         [data-theme="light"] {
-            --bg: #f0f2f5;
-            --card: #ffffff;
-            --border: #d0d7de;
-            --text: #1f2328;
-            --text-2: #656d76;
-            --accent: #58a6ff;
+            --bg: #f0f2f5; --card: #ffffff; --border: #d0d7de;
+            --text: #1f2328; --text-2: #656d76; --accent: #58a6ff;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
         body {
-            background: var(--bg);
-            color: var(--text);
+            background: var(--bg); color: var(--text);
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            min-height: 100vh;
-            margin: 0;
-            overflow: hidden;
+            min-height: 100vh; margin: 0; overflow: hidden;
             transition: background 0.3s;
         }
-
-        /* 背景 */
         .bg-pattern {
             position: fixed; inset: 0; pointer-events: none; z-index: 0;
-            background:
-                radial-gradient(circle at 20% 80%, rgba(88,166,255,0.08) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(188,140,255,0.08) 0%, transparent 50%);
+            background: radial-gradient(circle at 20% 80%, rgba(88,166,255,0.07) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(188,140,255,0.07) 0%, transparent 50%);
         }
-
-        /* 顶部状态栏 */
         .topbar {
-            position: relative; z-index: 10;
-            padding: 16px 20px 12px;
+            position: relative; z-index: 10; padding: 16px 20px 12px;
             display: flex; align-items: center; justify-content: space-between;
             background: linear-gradient(to bottom, var(--bg), transparent);
         }
@@ -64,180 +47,142 @@
         }
         .combo-num { font-size: 22px; font-weight: 800; color: var(--accent); }
 
-        /* 敲击区域 */
         .tap-area {
             position: relative; z-index: 5;
             display: flex; flex-direction: column;
             align-items: center; justify-content: center;
             height: calc(100vh - 140px);
-            cursor: pointer;
-            -webkit-user-select: none;
         }
 
-        /* 蛋 */
-        .egg-container {
+        /* ========== 蛋 ========== */
+        .egg-stage {
             position: relative;
-            width: 180px; height: 240px;
+            width: 200px; height: 260px;
             display: flex; align-items: center; justify-content: center;
         }
-        .egg {
-            width: 140px; height: 180px;
-            position: relative;
-            transition: transform 0.05s;
+        .egg-svg {
+            width: 150px; height: 200px;
+            position: relative; z-index: 2;
+            transition: transform 0.06s;
+            filter: drop-shadow(0 10px 25px rgba(0,0,0,0.35));
         }
-        .egg svg {
-            width: 100%; height: 100%;
-            filter: drop-shadow(0 8px 20px rgba(0,0,0,0.3));
+        .egg-svg.hit {
+            animation: eggShake 0.07s ease-in-out;
         }
-        .egg.shake {
-            animation: shake 0.08s ease-in-out;
-        }
-        @keyframes shake {
-            0%,100% { transform: translateX(0) rotate(0deg); }
-            25% { transform: translateX(-8px) rotate(-4deg); }
-            75% { transform: translateX(8px) rotate(4deg); }
+        @keyframes eggShake {
+            0%,100% { transform: translateX(0) rotate(0); }
+            25%      { transform: translateX(-10px) rotate(-5deg); }
+            75%      { transform: translateX(10px) rotate(5deg); }
         }
 
-        /* 裂纹 */
-        .crack-overlay {
-            position: absolute; inset: 0;
-            pointer-events: none; opacity: 0;
-            transition: opacity 0.1s;
+        /* 裂纹SVG */
+        .crack-svg {
+            position: absolute; z-index: 3; pointer-events: none;
+            width: 150px; height: 200px; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
         }
-        .crack-overlay.visible { opacity: 1; }
+        .crack-line { fill: none; stroke: #7a6550; stroke-width: 1.5; opacity: 0; }
+        .crack-line.show { opacity: 1; }
 
-        /* 碎裂动画 */
-        .egg-crack {
-            animation: eggBurst 0.6s ease-out forwards;
+        /* 蛋 HP 槽 */
+        .hp-track {
+            width: 140px; height: 7px;
+            background: var(--border); border-radius: 4px; overflow: hidden;
+            margin-top: 14px;
         }
-        @keyframes eggBurst {
-            0%   { transform: scale(1); opacity: 1; }
-            30%  { transform: scale(1.15); }
-            100% { transform: scale(0.3) rotate(20deg); opacity: 0; }
-        }
-
-        /* 蛋壳碎片粒子 */
-        .shell-particle {
-            position: absolute;
-            width: 20px; height: 20px;
-            pointer-events: none;
-            animation: particleFly 0.8s ease-out forwards;
-        }
-        @keyframes particleFly {
-            0%   { transform: translate(0,0) rotate(0deg) scale(1); opacity: 1; }
-            100% { transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.3); opacity: 0; }
+        .hp-fill {
+            height: 100%; border-radius: 4px;
+            background: linear-gradient(90deg, #f85149, #d29922, #58a6ff);
+            background-size: 300% 100%;
+            transition: width 0.12s ease-out;
         }
 
-        /* 蛋黄粒子 */
-        .yolk-particle {
-            position: absolute;
-            width: 14px; height: 14px;
-            background: radial-gradient(circle, #FFD700, #FFA500);
-            border-radius: 50%;
-            pointer-events: none;
-            animation: yolkSplash 0.7s ease-out forwards;
-        }
-        @keyframes yolkSplash {
-            0%   { transform: translate(0,0) scale(1); opacity: 1; }
-            100% { transform: translate(var(--tx), var(--ty)) scale(0.5); opacity: 0; }
-        }
-
-        /* 敲击特效文字 */
-        .hit-text {
-            position: absolute;
-            font-size: 28px; font-weight: 900;
-            color: var(--accent);
-            pointer-events: none;
-            animation: hitPop 0.5s ease-out forwards;
-            text-shadow: 0 0 20px rgba(88,166,255,0.6);
-        }
-        @keyframes hitPop {
-            0%   { transform: translateY(0) scale(0.5); opacity: 1; }
-            100% { transform: translateY(-60px) scale(1.2); opacity: 0; }
-        }
-
-        /* 进度条 */
-        .hp-bar-wrap {
-            width: 160px; height: 8px;
-            background: var(--border);
-            border-radius: 4px; overflow: hidden;
-            margin-top: 16px;
-        }
-        .hp-bar {
-            height: 100%; width: 100%;
-            background: linear-gradient(90deg, #58a6ff, #bc8cff);
-            border-radius: 4px;
-            transition: width 0.1s ease-out;
-        }
-
-        /* 敲击提示 */
-        .tap-hint {
-            position: absolute; bottom: 30px;
+        /* 提示文字 */
+        .hint {
+            position: absolute; bottom: 24px;
             font-size: 13px; color: var(--text-2);
-            animation: pulse 2s ease-in-out infinite;
+            animation: breathe 2.5s ease-in-out infinite;
         }
-        @keyframes pulse {
-            0%,100% { opacity: 0.5; }
-            50% { opacity: 1; }
+        @keyframes breathe { 0%,100%{opacity:.4} 50%{opacity:1} }
+
+        /* ========== 蛋碎粒子 ========== */
+        .fragment {
+            position: absolute;
+            pointer-events: none;
+            z-index: 50;
+            /* 三角形碎片 */
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+        }
+        .fragment.yolk {
+            border-radius: 50%;
+            background: radial-gradient(circle at 40% 40%, #FFD700, #FF8C00);
         }
 
-        /* 连击飘字 */
-        .combo-burst {
-            position: fixed; pointer-events: none; z-index: 100;
-            font-size: 48px; font-weight: 900; color: #FFD700;
-            text-shadow: 0 0 30px rgba(255,215,0,0.8), 0 2px 0 #FFA500;
-            animation: comboPop 1s ease-out forwards;
+        @keyframes fragFly {
+            0%   { transform: translate(var(--ox), var(--oy)) rotate(0deg) scale(1); opacity: 1; }
+            60%  { opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(var(--sc)); opacity: 0; }
         }
-        @keyframes comboPop {
-            0%   { transform: scale(0.3) translateY(0); opacity: 1; }
-            30%  { transform: scale(1.3) translateY(-20px); }
-            100% { transform: scale(1) translateY(-80px); opacity: 0; }
+        @keyframes yolkFly {
+            0%   { transform: translate(0,0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0.4); opacity: 0; }
         }
 
-        /* 屏幕闪光 */
-        .screen-flash {
-            position: fixed; inset: 0; pointer-events: none; z-index: 200;
-            background: rgba(255,255,255,0.15);
-            animation: flash 0.15s ease-out forwards;
+        /* ========== 屏幕特效 ========== */
+        .flash { position: fixed; inset: 0; pointer-events: none; z-index: 200; }
+        @keyframes screenFlash {
+            0%   { background: rgba(255,255,255,0.18); }
+            100% { background: rgba(255,255,255,0); }
         }
-        @keyframes flash {
-            0%   { opacity: 1; }
-            100% { opacity: 0; }
+        .combo-pop {
+            position: fixed; pointer-events: none; z-index: 300;
+            font-size: 52px; font-weight: 900;
+            color: #FFD700; text-shadow: 0 0 40px rgba(255,215,0,.9), 0 3px 0 #FF8C00;
+            animation: comboAnim 1.2s ease-out forwards;
         }
+        @keyframes comboAnim {
+            0%   { transform: translateX(-50%) scale(.2) translateY(0); opacity: 1; }
+            30%  { transform: translateX(-50%) scale(1.4) translateY(-20px); }
+            100% { transform: translateX(-50%) scale(1) translateY(-100px); opacity: 0; }
+        }
+        .hit-pop {
+            position: absolute; pointer-events: none; z-index: 60;
+            font-size: 26px; font-weight: 800;
+            color: var(--accent); text-shadow: 0 0 18px rgba(88,166,255,.6);
+            animation: hitAnim .55s ease-out forwards;
+        }
+        @keyframes hitAnim {
+            0%   { transform: translateY(0) scale(.6); opacity: 1; }
+            100% { transform: translateY(-70px) scale(1.1); opacity: 0; }
+        }
+
+        /* 成就 */
+        .achieve {
+            position: fixed; top: 80px; left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg,#1a1a2e,#16213e);
+            border: 1.5px solid #FFD700; border-radius: 16px;
+            padding: 14px 28px; z-index: 400;
+            text-align: center; color: #fff;
+            box-shadow: 0 0 50px rgba(255,215,0,.25);
+            animation: achIn .4s ease-out, achOut .5s ease-in 2.2s forwards;
+        }
+        @keyframes achIn  { from{transform:translateX(-50%) translateY(-30px);opacity:0} to{transform:translateX(-50%) translateY(0);opacity:1} }
+        @keyframes achOut { from{opacity:1} to{opacity:0;transform:translateX(-50%) translateY(-20px)} }
 
         /* 底部统计 */
-        .bottom-stats {
+        .bbar {
             position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
-            background: linear-gradient(to top, var(--bg), transparent);
+            background: linear-gradient(to top, var(--bg) 60%, transparent);
             padding: 20px;
-            display: flex; justify-content: center; gap: 24px;
+            display: flex; justify-content: center; gap: 16px;
         }
         .bstat {
-            text-align: center;
             background: var(--card); border: 1px solid var(--border);
-            border-radius: 12px; padding: 10px 18px;
+            border-radius: 12px; padding: 10px 18px; text-align: center;
         }
         .bstat-val { font-size: 22px; font-weight: 800; color: var(--accent); }
         .bstat-lbl { font-size: 11px; color: var(--text-2); margin-top: 2px; }
-
-        /* 成就弹窗 */
-        .achievement {
-            position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
-            border: 1px solid #FFD700;
-            border-radius: 16px; padding: 14px 24px; z-index: 300;
-            text-align: center; color: #fff;
-            animation: achievementIn 0.4s ease-out, achievementOut 0.4s ease-in 2s forwards;
-            box-shadow: 0 0 40px rgba(255,215,0,0.3);
-        }
-        @keyframes achievementIn {
-            from { transform: translateX(-50%) translateY(-30px); opacity: 0; }
-            to   { transform: translateX(-50%) translateY(0); opacity: 1; }
-        }
-        @keyframes achievementOut {
-            from { opacity: 1; }
-            to   { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-        }
     </style>
 </head>
 <body>
@@ -245,306 +190,293 @@
 
 <!-- 顶部 -->
 <div class="topbar">
-    <a href="/" class="back-btn">
-        <i class="fas fa-arrow-left"></i> 返回
+    <a href="/games" class="back-btn">
+        <i class="fas fa-th"></i> 游戏中心
     </a>
     <div class="stat-pill">
         <i class="fas fa-bolt" style="color:#FFD700"></i>
-        <span class="combo-num" id="combo">0</span>
+        <span class="combo-num" id="comboEl">0</span>
         <span style="color:var(--text-2);font-size:12px">连击</span>
     </div>
     <div class="stat-pill">
         <i class="fas fa-fire" style="color:#f85149"></i>
-        <span class="combo-num" id="maxCombo">0</span>
+        <span class="combo-num" id="maxComboEl">0</span>
         <span style="color:var(--text-2);font-size:12px">最高</span>
     </div>
 </div>
 
-<!-- 敲击区域 -->
+<!-- 敲击区 -->
 <div class="tap-area" id="tapArea">
-    <div class="egg-container" id="eggContainer">
-        <div class="egg" id="egg">
-            <!-- 鸡蛋SVG -->
-            <svg viewBox="0 0 100 140" id="eggSvg">
-                <defs>
-                    <radialGradient id="eggGrad" cx="35%" cy="30%" r="65%">
-                        <stop offset="0%" style="stop-color:#fffef5"/>
-                        <stop offset="60%" style="stop-color:#f5f0e0"/>
-                        <stop offset="100%" style="stop-color:#e8dcc8"/>
-                    </radialGradient>
-                    <radialGradient id="yolkGrad" cx="40%" cy="40%" r="60%">
-                        <stop offset="0%" style="stop-color:#FFD700"/>
-                        <stop offset="100%" style="stop-color:#FFA500"/>
-                    </radialGradient>
-                </defs>
-                <!-- 蛋壳 -->
-                <ellipse cx="50" cy="80" rx="40" ry="52" fill="url(#eggGrad)" stroke="#d4c4a8" stroke-width="1.5"/>
-                <!-- 高光 -->
-                <ellipse cx="36" cy="65" rx="8" ry="12" fill="rgba(255,255,255,0.6)"/>
-            </svg>
-            <!-- 裂纹覆盖层 -->
-            <svg class="crack-overlay" id="crackOverlay" viewBox="0 0 100 140">
-                <path id="crackPath" fill="none" stroke="#8B7355" stroke-width="1.5" opacity="0.7"/>
-            </svg>
-        </div>
+
+    <div class="egg-stage" id="eggStage">
+        <!-- 蛋本体 -->
+        <svg class="egg-svg" id="eggSvg" viewBox="0 0 100 140">
+            <defs>
+                <radialGradient id="eggG" cx="35%" cy="28%" r="68%">
+                    <stop offset="0%"   stop-color="#fffef8"/>
+                    <stop offset="55%"  stop-color="#f4eed8"/>
+                    <stop offset="100%" stop-color="#e0d4b8"/>
+                </radialGradient>
+            </defs>
+            <ellipse cx="50" cy="82" rx="40" ry="52" fill="url(#eggG)" stroke="#cfc0a0" stroke-width="1.2"/>
+            <ellipse cx="34" cy="64" rx="7" ry="11" fill="rgba(255,255,255,.65)"/>
+        </svg>
+
+        <!-- 裂纹 -->
+        <svg class="crack-svg" viewBox="0 0 100 140" id="crackSvg">
+            <path id="c1" class="crack-line" d="M50 42 L44 58 L56 66 L42 84"/>
+            <path id="c2" class="crack-line" d="M50 50 L62 63 L50 76 L63 96"/>
+            <path id="c3" class="crack-line" d="M47 55 L35 70 L50 86"/>
+            <path id="c4" class="crack-line" d="M53 44 L66 58 L55 72 L68 92"/>
+            <path id="c5" class="crack-line" d="M44 62 L32 78 L47 100"/>
+            <path id="c6" class="crack-line" d="M56 60 L70 74 L58 88 L72 108"/>
+        </svg>
     </div>
 
-    <div class="hp-bar-wrap">
-        <div class="hp-bar" id="hpBar"></div>
+    <div class="hp-track">
+        <div class="hp-fill" id="hpFill" style="width:100%"></div>
     </div>
 
-    <div class="tap-hint" id="tapHint">
+    <div class="hint">
         <i class="fas fa-hand-pointer mr-1"></i>快速敲击打碎它！
     </div>
 </div>
 
 <!-- 底部统计 -->
-<div class="bottom-stats">
-    <div class="bstat">
-        <div class="bstat-val" id="totalCracked">0</div>
-        <div class="bstat-lbl">已碎</div>
-    </div>
-    <div class="bstat">
-        <div class="bstat-val" id="totalTaps">0</div>
-        <div class="bstat-lbl">敲击</div>
-    </div>
-    <div class="bstat">
-        <div class="bstat-val" style="color:#FFD700" id="efficiency">0%</div>
-        <div class="bstat-lbl">效率</div>
-    </div>
+<div class="bbar">
+    <div class="bstat"><div class="bstat-val" id="totalEggs">0</div><div class="bstat-lbl">已碎</div></div>
+    <div class="bstat"><div class="bstat-val" id="totalTaps">0</div><div class="bstat-lbl">敲击</div></div>
+    <div class="bstat"><div class="bstat-val" style="color:#FFD700" id="efficiency">0%</div><div class="bstat-lbl">效率</div></div>
 </div>
 
-<!-- 成就容器 -->
-<div id="achieveContainer"></div>
+<div id="achieveBox"></div>
 
 <script>
-    // ========== 游戏状态 ==========
-    const MAX_HP = 15; // 敲几下碎
+    // ========== 状态 ==========
+    const MAX_HP = 12;
     let hp = MAX_HP;
-    let combo = 0;
-    let maxCombo = 0;
-    let totalCracked = 0;
-    let totalTaps = 0;
+    let combo = 0, maxCombo = 0;
+    let totalEggs = 0, totalTaps = 0;
     let comboTimer = null;
-    let lastHitTime = 0;
-    let achievements = new Set();
+    let lastTap = 0;
+    let crackCount = 0;
+    let earned = new Set();
 
-    const egg = document.getElementById('egg');
-    const eggContainer = document.getElementById('eggContainer');
-    const hpBar = document.getElementById('hpBar');
-    const crackOverlay = document.getElementById('crackOverlay');
-    const crackPath = document.getElementById('crackPath');
-    const tapArea = document.getElementById('tapArea');
+    const eggSvg   = document.getElementById('eggSvg');
+    const eggStage = document.getElementById('eggStage');
+    const hpFill   = document.getElementById('hpFill');
+    const tapArea  = document.getElementById('tapArea');
 
     // ========== 敲击 ==========
-    function onTap(e) {
+    tapArea.addEventListener('pointerdown', e => {
         e.preventDefault();
         totalTaps++;
-        updateHPBar();
 
-        // 裂纹叠加
-        addCrackLine();
-
-        // 速度判定
         const now = Date.now();
-        const gap = now - lastHitTime;
-        lastHitTime = now;
+        const gap = now - lastTap;
+        lastTap = now;
 
-        if (gap < 300) {
+        // 连击
+        if (gap < 320) {
             combo++;
             if (combo > maxCombo) maxCombo = combo;
-            if (combo % 10 === 0 && combo > 0) showComboBurst(combo);
-            checkAchievement();
+            if (combo >= 5 && combo % 5 === 0) showComboPop(combo);
+            checkAchieve();
         } else {
             combo = Math.max(0, combo - 2);
         }
-        document.getElementById('combo').textContent = combo;
-        document.getElementById('maxCombo').textContent = maxCombo;
+        document.getElementById('comboEl').textContent = combo;
+        document.getElementById('maxComboEl').textContent = maxCombo;
 
-        // 重置连击计时
         clearTimeout(comboTimer);
-        comboTimer = setTimeout(() => { combo = 0; document.getElementById('combo').textContent = combo; }, 800);
+        comboTimer = setTimeout(() => { combo = 0; document.getElementById('comboEl').textContent = 0; }, 900);
 
         // 敲击动画
-        egg.classList.remove('shake');
-        void egg.offsetWidth;
-        egg.classList.add('shake');
+        eggSvg.classList.remove('hit');
+        void eggSvg.offsetWidth;
+        eggSvg.classList.add('hit');
 
-        // 屏幕闪光（连击高时）
-        if (combo >= 5) flashScreen();
+        // 裂纹
+        crackCount++;
+        const crackEl = document.getElementById('c' + Math.min(crackCount, 6));
+        if (crackEl) crackEl.classList.add('show');
+
+        // 屏幕闪光（高连击）
+        if (combo >= 4) doFlash();
 
         // 飘字
-        spawnHitText(combo >= 3 ? '💥' : '+1');
+        spawnHit(combo >= 5 ? '💥' : '+1');
 
-        // 减少HP
+        // HP
         hp--;
-        if (hp <= 0) {
-            crackEgg();
-        } else {
-            // 音效反馈色变
-            const ratio = hp / MAX_HP;
-            egg.style.filter = `drop-shadow(0 8px 20px rgba(0,0,0,0.3)) ${ratio < 0.5 ? 'saturate(1.3)' : ''}`;
-        }
+        updateHP();
+        if (hp <= 0) breakEgg();
 
         updateStats();
-    }
-
-    tapArea.addEventListener('pointerdown', onTap);
+    });
 
     // ========== 破碎 ==========
-    function crackEgg() {
-        // 蛋壳爆裂
-        egg.classList.add('egg-crack');
+    function breakEgg() {
+        totalEggs++;
+        combo++;
+        if (combo > maxCombo) maxCombo = combo;
 
-        // 蛋黄粒子
-        for (let i = 0; i < 8; i++) {
-            const p = document.createElement('div');
-            p.className = 'yolk-particle';
-            const angle = (i / 8) * Math.PI * 2;
-            const dist = 60 + Math.random() * 80;
-            p.style.cssText = `
-                left: 50%; top: 55%;
-                --tx: ${Math.cos(angle) * dist}px;
-                --ty: ${Math.sin(angle) * dist}px;
-            `;
-            eggContainer.appendChild(p);
-            setTimeout(() => p.remove(), 700);
-        }
+        // 隐藏蛋
+        eggSvg.style.transition = 'transform 0.5s, opacity 0.5s';
+        eggSvg.style.transform = 'scale(1.3)';
+        eggSvg.style.opacity = '0';
 
-        // 蛋壳碎片
-        for (let i = 0; i < 12; i++) {
-            const s = document.createElement('div');
-            s.className = 'shell-particle';
-            const colors = ['#f5f0e0','#e8dcc8','#d4c4a8','#fffef5'];
-            const color = colors[Math.floor(Math.random() * colors.length)];
-            const angle = (Math.random()) * Math.PI * 2;
-            const dist = 80 + Math.random() * 120;
-            s.style.cssText = `
-                left: ${40 + Math.random() * 20}px;
-                top: ${80 + Math.random() * 40}px;
-                background: ${color};
-                border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
-                --tx: ${Math.cos(angle) * dist}px;
-                --ty: ${Math.sin(angle) * dist + 40}px;
-                --rot: ${(Math.random() * 720 - 360)}deg;
-            `;
-            eggContainer.appendChild(s);
-            setTimeout(() => s.remove(), 800);
-        }
+        // 蛋碎粒子
+        spawnShards();
+        spawnYolk();
+        spawnHit('💥 x' + (combo > 5 ? combo : 1));
 
-        totalCracked++;
-        spawnHitText(`💥 x${combo > 5 ? combo : 1}`);
-
-        setTimeout(spawnNewEgg, 600);
+        // 新蛋
+        setTimeout(spawnNewEgg, 700);
         updateStats();
     }
 
     function spawnNewEgg() {
-        egg.classList.remove('egg-crack', 'shake');
-        hp = MAX_HP;
-        crackPath.setAttribute('d', '');
-        crackOverlay.classList.remove('visible');
-        egg.style.filter = '';
-        updateHPBar();
+        eggSvg.style.transition = '';
+        eggSvg.style.transform = '';
+        eggSvg.style.opacity = '';
+        hp = MAX_HP; crackCount = 0;
+        for (let i = 1; i <= 6; i++) {
+            const el = document.getElementById('c' + i);
+            if (el) el.classList.remove('show');
+        }
+        updateHP();
     }
 
-    // ========== 裂纹 ==========
-    let crackCount = 0;
-    function addCrackLine() {
-        crackOverlay.classList.add('visible');
-        crackCount++;
-        const paths = [
-            'M50 40 L45 60 L55 70 L42 90',
-            'M50 50 L60 65 L48 80 L62 100',
-            'M48 55 L38 70 L52 85',
-            'M52 45 L65 60 L55 75 L68 95',
-            'M45 65 L35 80 L50 100',
-        ];
-        crackPath.setAttribute('d', paths[Math.min(crackCount - 1, paths.length - 1)]);
-        if (crackCount >= 3) {
-            // 严重裂纹
-            crackPath.setAttribute('stroke-width', '2.5');
+    // ========== 碎片粒子 ==========
+    function spawnShards() {
+        const colors = ['#f4eed8','#e8ddc0','#d8cda8','#fffef8','#cfc0a0','#e0d4b8'];
+        for (let i = 0; i < 18; i++) {
+            const s = document.createElement('div');
+            s.className = 'fragment';
+            const sz = 10 + Math.random() * 20;
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const ox = (Math.random() - 0.5) * 30;
+            const oy = (Math.random() - 0.5) * 30;
+            const tx = ox + (Math.random() - 0.5) * 280;
+            const ty = oy + 60 + Math.random() * 180;
+            const rot = Math.random() * 1080 - 540;
+            const sc = 0.2 + Math.random() * 0.7;
+            s.style.cssText = `
+                left: calc(50% + ${ox}px);
+                top: calc(50% + ${oy}px);
+                width: ${sz}px; height: ${sz}px;
+                background: ${color};
+                --ox: ${ox}px; --oy: ${oy}px;
+                --tx: ${tx}px; --ty: ${ty}px;
+                --rot: ${rot}deg; --sc: ${sc};
+                animation: fragFly ${0.5 + Math.random()*0.5}s ease-out forwards;
+            `;
+            eggStage.appendChild(s);
+            setTimeout(() => s.remove(), 1100);
+        }
+    }
+
+    function spawnYolk() {
+        for (let i = 0; i < 7; i++) {
+            const y = document.createElement('div');
+            y.className = 'fragment yolk';
+            const sz = 8 + Math.random() * 10;
+            const ox = (Math.random() - 0.5) * 20;
+            const oy = (Math.random() - 0.5) * 20;
+            const angle = (i / 7) * Math.PI * 2;
+            const dist = 70 + Math.random() * 90;
+            const tx = Math.cos(angle) * dist;
+            const ty = Math.sin(angle) * dist + 40;
+            y.style.cssText = `
+                left: calc(50% + ${ox}px); top: calc(55% + ${oy}px);
+                width: ${sz}px; height: ${sz}px;
+                --tx: ${tx}px; --ty: ${ty}px;
+                animation: yolkFly ${0.5 + Math.random()*0.4}s ease-out forwards;
+            `;
+            eggStage.appendChild(y);
+            setTimeout(() => y.remove(), 900);
         }
     }
 
     // ========== 特效 ==========
-    function spawnHitText(text) {
+    function doFlash() {
+        const f = document.createElement('div');
+        f.className = 'flash';
+        f.style.animation = 'screenFlash 0.18s ease-out forwards';
+        document.body.appendChild(f);
+        setTimeout(() => f.remove(), 200);
+    }
+
+    function showComboPop(n) {
         const el = document.createElement('div');
-        el.className = 'hit-text';
+        el.className = 'combo-pop';
+        el.textContent = n + ' COMBO! 🔥';
+        el.style.left = '50%';
+        el.style.top = '38%';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1200);
+    }
+
+    function spawnHit(text) {
+        const el = document.createElement('div');
+        el.className = 'hit-pop';
         el.textContent = text;
         el.style.left = (30 + Math.random() * 40) + '%';
-        el.style.top = (20 + Math.random() * 20) + '%';
+        el.style.top  = (15 + Math.random() * 25) + '%';
         document.body.appendChild(el);
-        setTimeout(() => el.remove(), 500);
+        setTimeout(() => el.remove(), 550);
     }
 
-    function flashScreen() {
-        const f = document.createElement('div');
-        f.className = 'screen-flash';
-        document.body.appendChild(f);
-        setTimeout(() => f.remove(), 150);
-    }
-
-    function showComboBurst(n) {
-        const el = document.createElement('div');
-        el.className = 'combo-burst';
-        el.textContent = `${n} COMBO! 🔥`;
-        el.style.left = '50%';
-        el.style.top = '40%';
-        el.style.transform = 'translateX(-50%)';
-        document.body.appendChild(el);
-        setTimeout(() => el.remove(), 1000);
-    }
-
-    // ========== 成就 ==========
-    const ACHIEVEMENTS = [
-        { id: 'first', label: '初次碎蛋', condition: () => totalCracked >= 1 },
-        { id: '10combo', label: '10连击！', condition: () => maxCombo >= 10 },
-        { id: '20combo', label: '20连击！', condition: () => maxCombo >= 20 },
-        { id: '30combo', label: '30连击！传说！', condition: () => maxCombo >= 30 },
-        { id: '10eggs', label: '碎蛋达人：10颗', condition: () => totalCracked >= 10 },
-        { id: '50eggs', label: '碎蛋狂人：50颗', condition: () => totalCracked >= 50 },
-    ];
-
-    function checkAchievement() {
-        ACHIEVEMENTS.forEach(a => {
-            if (!achievements.has(a.id) && a.condition()) {
-                achievements.add(a.id);
-                showAchievement(a.label);
-            }
-        });
-    }
-
-    function showAchievement(label) {
-        const container = document.getElementById('achieveContainer');
-        const el = document.createElement('div');
-        el.className = 'achievement';
-        el.innerHTML = `<div style="font-size:20px">🏆 成就解锁</div><div style="font-size:14px;margin-top:4px;color:#FFD700">${label}</div>`;
-        container.appendChild(el);
-        setTimeout(() => el.remove(), 2500);
-    }
-
-    // ========== UI更新 ==========
-    function updateHPBar() {
-        hpBar.style.width = (hp / MAX_HP * 100) + '%';
-        if (hp / MAX_HP < 0.3) {
-            hpBar.style.background = 'linear-gradient(90deg, #f85149, #d29922)';
-        } else if (hp / MAX_HP < 0.6) {
-            hpBar.style.background = 'linear-gradient(90deg, #d29922, #58a6ff)';
+    // ========== HP条 ==========
+    function updateHP() {
+        const pct = hp / MAX_HP * 100;
+        hpFill.style.width = pct + '%';
+        hpFill.style.backgroundPosition = (100 - pct) + '% 0';
+        if (pct < 25) {
+            hpFill.style.background = 'linear-gradient(90deg,#f85149,#d29922)';
+        } else if (pct < 55) {
+            hpFill.style.background = 'linear-gradient(90deg,#d29922,#58a6ff)';
         } else {
-            hpBar.style.background = 'linear-gradient(90deg, #58a6ff, #bc8cff)';
+            hpFill.style.background = 'linear-gradient(90deg,#58a6ff,#bc8cff)';
         }
     }
 
+    // ========== 统计 ==========
     function updateStats() {
-        document.getElementById('totalCracked').textContent = totalCracked;
+        document.getElementById('totalEggs').textContent = totalEggs;
         document.getElementById('totalTaps').textContent = totalTaps;
-        const eff = totalTaps > 0 ? Math.round(totalCracked / totalTaps * 100) : 0;
+        const eff = totalTaps > 0 ? Math.round(totalEggs / totalTaps * 100) : 0;
         document.getElementById('efficiency').textContent = eff + '%';
     }
 
-    // ========== 初始化 ==========
-    updateHPBar();
+    // ========== 成就 ==========
+    const ACHS = [
+        { id:'f1', label:'初次碎蛋 🐣', cond: () => totalEggs >= 1 },
+        { id:'c10', label:'10连击！ ⚡',  cond: () => maxCombo >= 10 },
+        { id:'c20', label:'20连击！ 💫',  cond: () => maxCombo >= 20 },
+        { id:'c30', label:'30连击传说！ 🌟', cond: () => maxCombo >= 30 },
+        { id:'e10', label:'碎蛋10颗 🥚',   cond: () => totalEggs >= 10 },
+        { id:'e50', label:'碎蛋50颗 💥',   cond: () => totalEggs >= 50 },
+    ];
+    function checkAchieve() {
+        ACHS.forEach(a => {
+            if (!earned.has(a.id) && a.cond()) {
+                earned.add(a.id);
+                showAchieve(a.label);
+            }
+        });
+    }
+    function showAchieve(label) {
+        const box = document.getElementById('achieveBox');
+        const el = document.createElement('div');
+        el.className = 'achieve';
+        el.innerHTML = `<div style="font-size:18px">🏆 成就解锁</div><div style="font-size:13px;margin-top:4px;color:#FFD700">${label}</div>`;
+        box.appendChild(el);
+        setTimeout(() => el.remove(), 2700);
+    }
+
+    updateHP();
 </script>
 </body>
 </html>

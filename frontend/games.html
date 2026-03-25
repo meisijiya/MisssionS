@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏中心</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root, [data-theme="dark"] {
+            --bg: #0d1117; --card: #161b22; --card-hover: #1c2128;
+            --border: #30363d; --text: #e6edf3; --text-2: #8b949e; --text-3: #484f58;
+            --blue: #58a6ff; --green: #3fb950; --amber: #d29922;
+            --red: #f85149; --purple: #bc8cff; --pink: #db6d8b;
+        }
+        [data-theme="light"] {
+            --bg: #f0f2f5; --card: #ffffff; --card-hover: #f7f8fa;
+            --border: #d0d7de; --text: #1f2328; --text-2: #656d76; --text-3: #afb8c1;
+        }
+        * { box-sizing: border-box; }
+        body {
+            background: var(--bg); color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh; margin: 0;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* 顶部装饰 */
+        .accent-bar { height: 2px; background: linear-gradient(90deg, var(--blue), var(--purple), var(--pink)); }
+
+        /* 顶部 */
+        .header {
+            padding: 20px 20px 16px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: linear-gradient(to bottom, var(--bg), transparent);
+        }
+        .header h1 {
+            font-size: 22px; font-weight: 800;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .back-btn {
+            background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+            color: var(--text); padding: 8px 14px; font-size: 13px;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+            transition: all 0.2s;
+        }
+        .back-btn:hover { border-color: var(--blue); color: var(--blue); }
+        .theme-btn {
+            background: none; border: none; cursor: pointer;
+            color: var(--text-2); font-size: 18px; padding: 6px;
+            transition: color 0.2s;
+        }
+        .theme-btn:hover { color: var(--blue); }
+
+        /* 简介文字 */
+        .intro {
+            padding: 0 20px 16px;
+            font-size: 13px; color: var(--text-2);
+            line-height: 1.6;
+        }
+
+        /* 游戏卡片网格 */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            padding: 0 20px 40px;
+        }
+        .game-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.25s;
+            text-decoration: none;
+            display: block;
+            color: inherit;
+        }
+        .game-card:hover {
+            background: var(--card-hover);
+            border-color: var(--blue);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+        }
+        .game-thumb {
+            width: 100%; height: 140px;
+            position: relative;
+            overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .game-thumb-bg {
+            position: absolute; inset: 0;
+            background-size: cover; background-position: center;
+            transition: transform 0.3s;
+        }
+        .game-card:hover .game-thumb-bg { transform: scale(1.04); }
+        .game-thumb-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.6));
+        }
+        .game-icon-wrap {
+            position: relative; z-index: 2;
+            width: 64px; height: 64px;
+            border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        }
+        .game-status {
+            position: absolute; top: 10px; right: 10px; z-index: 3;
+            font-size: 10px; font-weight: 700;
+            padding: 3px 8px; border-radius: 10px;
+            background: var(--green); color: #fff;
+        }
+        .game-body { padding: 14px 16px; }
+        .game-title { font-size: 16px; font-weight: 700; margin-bottom: 5px; }
+        .game-desc { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+        .game-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+        .game-tag {
+            font-size: 10px; padding: 2px 8px; border-radius: 10px;
+            background: var(--border); color: var(--text-2);
+        }
+        .game-tag.hot { background: rgba(248,81,73,0.15); color: var(--red); }
+        .game-tag.new  { background: rgba(88,166,255,0.15); color: var(--blue); }
+
+        /* 即将上线占位 */
+        .game-card.locked {
+            opacity: 0.6;
+            cursor: default;
+        }
+        .game-card.locked:hover {
+            transform: none;
+            border-color: var(--border);
+            box-shadow: none;
+        }
+        .locked-overlay {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0.4);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; color: #fff; font-weight: 600;
+            border-radius: 16px 16px 0 0;
+        }
+
+        /* 全部玩过徽章 */
+        .badge {
+            position: absolute; top: 10px; left: 10px; z-index: 3;
+            font-size: 10px; font-weight: 700;
+            padding: 3px 8px; border-radius: 10px;
+            background: var(--amber); color: #fff;
+        }
+
+        /* 底部 */
+        .footer {
+            text-align: center; padding: 20px;
+            font-size: 12px; color: var(--text-3);
+            border-top: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+
+<div class="accent-bar"></div>
+
+<div class="header">
+    <h1>
+        <i class="fas fa-gamepad" style="color:var(--purple)"></i>
+        游戏中心
+    </h1>
+    <div class="flex items-center gap-3">
+        <button class="theme-btn" onclick="toggleTheme()" title="切换主题">
+            <i class="fas fa-moon" id="themeIcon"></i>
+        </button>
+        <a href="/" class="back-btn">
+            <i class="fas fa-home"></i> 任务中心
+        </a>
+    </div>
+</div>
+
+<p class="intro">
+    压力太大？来这里敲敲打打，释放一下 🧱<br>
+    <span style="font-size:12px">持续更新中，更多游戏即将上线...</span>
+</p>
+
+<div class="games-grid">
+
+    <!-- 敲蛋 -->
+    <a href="/game" class="game-card" id="card-egg">
+        <div class="game-thumb">
+            <div class="game-thumb-bg" style="background:radial-gradient(circle at 50% 60%, #f5e6c8 0%, #e8d4a8 40%, #c8a870 100%)"></div>
+            <div class="game-thumb-overlay"></div>
+            <div class="badge">热门</div>
+            <div class="game-icon-wrap" style="background:linear-gradient(135deg,#fffef0,#f0e0b0);box-shadow:0 4px 20px rgba(240,200,100,0.5)">
+                <span style="font-size:36px">🥚</span>
+            </div>
+            <div class="game-status">可玩</div>
+        </div>
+        <div class="game-body">
+            <div class="game-title">敲蛋解压</div>
+            <div class="game-desc">快速敲击打碎蛋壳，裂纹叠加+粒子特效，连击成就系统。越敲越爽！</div>
+            <div class="game-tags">
+                <span class="game-tag hot">🔥 解压</span>
+                <span class="game-tag">⏱️ 即时</span>
+                <span class="game-tag new">🆕 新上线</span>
+            </div>
+        </div>
+    </a>
+
+    <!-- 即将上线 -->
+    <div class="game-card locked">
+        <div class="game-thumb">
+            <div class="game-thumb-bg" style="background:linear-gradient(135deg,#1a1a2e,#16213e)"></div>
+            <div class="game-thumb-overlay"></div>
+            <div class="game-icon-wrap" style="background:rgba(255,255,255,0.1)">
+                <span style="font-size:28px;opacity:0.5">🎮</span>
+            </div>
+            <div class="locked-overlay"><i class="fas fa-lock mr-1"></i>即将上线</div>
+        </div>
+        <div class="game-body">
+            <div class="game-title" style="color:var(--text-2)">???</div>
+            <div class="game-desc">更多解压小游戏正在开发中...</div>
+            <div class="game-tags">
+                <span class="game-tag">🔜 敬请期待</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 即将上线 -->
+    <div class="game-card locked">
+        <div class="game-thumb">
+            <div class="game-thumb-bg" style="background:linear-gradient(135deg,#1a2e1a,#162116)"></div>
+            <div class="game-thumb-overlay"></div>
+            <div class="game-icon-wrap" style="background:rgba(255,255,255,0.1)">
+                <span style="font-size:28px;opacity:0.5">🎮</span>
+            </div>
+            <div class="locked-overlay"><i class="fas fa-lock mr-1"></i>即将上线</div>
+        </div>
+        <div class="game-body">
+            <div class="game-title" style="color:var(--text-2)">???</div>
+            <div class="game-desc">更多解压小游戏正在开发中...</div>
+            <div class="game-tags">
+                <span class="game-tag">🔜 敬请期待</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="footer">
+    <i class="fas fa-heart" style="color:var(--pink)"></i>
+    游戏中心 · 持续更新中<br>
+    <span style="font-size:11px">老江湖出品</span>
+</div>
+
+<script>
+    // 主题
+    (function() {
+        const t = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+        updateIcon(t);
+    })();
+    function toggleTheme() {
+        const cur = document.documentElement.getAttribute('data-theme');
+        const nxt = cur === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', nxt);
+        localStorage.setItem('theme', nxt);
+        updateIcon(nxt);
+    }
+    function updateIcon(t) {
+        document.getElementById('themeIcon').className = t === 'light' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+</script>
+</body>
+</html>
