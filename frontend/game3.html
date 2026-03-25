@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>追逐战</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; margin: 0; padding: 0; }
+        body { background: #0d1117; font-family: -apple-system, sans-serif; overflow: hidden; }
+
+        .topbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+            padding: 12px 16px 10px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: linear-gradient(to bottom, rgba(13,17,23,0.98), transparent);
+        }
+        .back-btn {
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px; color: #e6edf3; padding: 7px 13px; font-size: 12px;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
+        }
+        .title { font-size: 16px; font-weight: 800; color: #FFD93D; }
+        .timer-pill {
+            background: rgba(79,195,247,0.15); border: 1px solid rgba(79,195,247,0.35);
+            border-radius: 20px; padding: 5px 14px;
+            color: #4fc3f7; font-size: 14px; font-weight: 800;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* 追逐场景 */
+        .chase-area {
+            position: fixed; inset: 0; z-index: 10;
+            display: flex; flex-direction: column;
+            cursor: pointer;
+        }
+
+        /* 草地 */
+        .ground {
+            position: absolute; bottom: 80px; left: 0; right: 0; height: 30px;
+            background: linear-gradient(to top, #2d5016, transparent);
+            opacity: 0.5;
+        }
+
+        /* 进度条 */
+        .progress-track {
+            position: absolute; top: 50%; left: 5%; right: 5%;
+            height: 6px; background: rgba(255,255,255,0.1);
+            border-radius: 3px; z-index: 5;
+        }
+        .progress-fill {
+            height: 100%; border-radius: 3px;
+            background: linear-gradient(90deg, #FFD93D, #FF6B6B);
+            width: 60%;
+            transition: width 0.15s;
+        }
+
+        /* 布布 */
+        .bubu-runner {
+            position: absolute; bottom: 90px;
+            width: 28vw; max-width: 120px;
+            transition: left 0.12s;
+        }
+        .bubu-runner img { width: 100%; height: auto; display: block; }
+        .bubu-runner.caught img { animation: bubuCatch 0.3s ease-out; }
+        @keyframes bubuCatch { 0%,100%{transform:scale(1)} 50%{transform:scale(1.2)} }
+
+        /* 一二 */
+        .yiyi-runner {
+            position: absolute; bottom: 90px;
+            width: 22vw; max-width: 95px;
+            transition: left 0.12s;
+        }
+        .yiyi-runner img { width: 100%; height: auto; display: block; }
+        .yiyi-runner.run { animation: yiyiRun 0.15s ease-in-out; }
+        @keyframes yiyiRun { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+        .yiyi-runner.caught { animation: yiyiCaught 0.4s ease-out; }
+        @keyframes yiyiCaught { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-15deg)} 75%{transform:rotate(15deg)} }
+
+        /* 速度指示 */
+        .speed-indicator {
+            position: absolute; bottom: 200px; left: 50%; transform: translateX(-50%);
+            font-size: 32px; font-weight: 900;
+            color: #FFD93D;
+            opacity: 0; transition: opacity 0.2s;
+            text-shadow: 0 0 20px rgba(255,217,61,0.6);
+            pointer-events: none; z-index: 20;
+        }
+        .speed-indicator.show { opacity: 1; animation: speedPop 0.3s ease-out; }
+        @keyframes speedPop { 0%{transform:translateX(-50%) scale(0.5)} 60%{transform:translateX(-50%) scale(1.3)} 100%{transform:translateX(-50%) scale(1)} }
+
+        /* 结果画面 */
+        .result-screen {
+            position: fixed; inset: 0; z-index: 300;
+            background: rgba(0,0,0,0.85);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 16px;
+            backdrop-filter: blur(8px);
+        }
+        .result-title {
+            font-size: 36px; font-weight: 900;
+            color: #FFD93D;
+            text-shadow: 0 0 30px rgba(255,217,61,0.5);
+        }
+        .result-time {
+            font-size: 56px; font-weight: 900; color: #fff;
+        }
+        .result-label { font-size: 14px; color: rgba(255,255,255,0.5); margin-top: -10px; }
+        .result-btn {
+            background: linear-gradient(135deg, #FFD93D, #FF8C00);
+            border: none; border-radius: 14px;
+            padding: 12px 32px; font-size: 16px; font-weight: 800;
+            color: #1a1a2e; cursor: pointer;
+            margin-top: 8px;
+            transition: transform 0.2s, filter 0.2s;
+        }
+        .result-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+
+        /* 屏幕抖动 */
+        .scene-shake { animation: sceneShake 0.3s ease-out; }
+        @keyframes sceneShake {
+            0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 60%{transform:translateX(8px)} 80%{transform:translateX(-4px)}
+        }
+
+        /* POW */
+        .pow-word {
+            position: fixed; font-size: 30px; font-weight: 900; z-index: 100;
+            pointer-events: none;
+            animation: powUp 0.6s ease-out forwards;
+        }
+        @keyframes powUp {
+            0%{transform:scale(0.2) translateY(0);opacity:1}
+            50%{transform:scale(1.2) translateY(-20px);opacity:1}
+            100%{transform:scale(1) translateY(-60px);opacity:0}
+        }
+
+        /* 成就 */
+        .achieve {
+            position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg,#1a1a2e,#16213e);
+            border: 1.5px solid #FFD93D; border-radius: 16px;
+            padding: 12px 24px; z-index: 400; color: #fff; text-align: center;
+            box-shadow: 0 0 40px rgba(255,217,61,0.2);
+            animation: achIn .35s ease-out, achOut .4s ease-in 2.3s forwards;
+        }
+        @keyframes achIn  { from{transform:translateX(-50%) translateY(-20px);opacity:0} to{transform:translateX(-50%) translateY(0);opacity:1} }
+        @keyframes achOut { from{opacity:1} to{opacity:0;transform:translateX(-50%) translateY(-15px)} }
+
+        /* 底部 */
+        .bbar {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+            background: linear-gradient(to top, rgba(13,17,23,0.97) 50%, transparent);
+            padding: 14px 12px 18px;
+            display: flex; justify-content: space-around;
+        }
+        .bstat {
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 8px 12px; text-align: center; min-width: 70px;
+        }
+        .bstat-num { font-size: 22px; font-weight: 900; color: #58a6ff; }
+        .bstat-lbl { font-size: 10px; color: rgba(230,237,243,0.35); margin-top: 1px; }
+        .hint {
+            position: fixed; bottom: 95px; left: 0; right: 0;
+            text-align: center; font-size: 12px; color: rgba(230,237,243,0.25); z-index: 50;
+            animation: breathe 2s ease-in-out infinite;
+        }
+        @keyframes breathe { 0%,100%{opacity:.2} 50%{opacity:.55} }
+
+        /* 开始画面 */
+        .start-screen {
+            position: fixed; inset: 0; z-index: 300;
+            background: rgba(0,0,0,0.85);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 20px;
+            backdrop-filter: blur(8px);
+        }
+        .start-title {
+            font-size: 32px; font-weight: 900; color: #FFD93D;
+            text-shadow: 0 0 30px rgba(255,217,61,0.4);
+        }
+        .start-sub { font-size: 14px; color: rgba(255,255,255,0.5); text-align: center; line-height: 1.6; }
+        .start-btn {
+            background: linear-gradient(135deg, #FFD93D, #FF8C00);
+            border: none; border-radius: 14px;
+            padding: 14px 40px; font-size: 18px; font-weight: 800;
+            color: #1a1a2e; cursor: pointer;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+    </style>
+</head>
+<body>
+
+<!-- 顶部 -->
+<div class="topbar">
+    <a href="/games" class="back-btn"><i class="fas fa-th"></i> 游戏合集</a>
+    <div class="title">🏃 追逐战</div>
+    <div class="timer-pill" id="timerEl">0.0秒</div>
+</div>
+
+<!-- 追逐场景 -->
+<div class="chase-area" id="chaseArea">
+
+    <div class="ground"></div>
+
+    <!-- 进度条（距离指示） -->
+    <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <!-- 布布 -->
+    <div class="bubu-runner" id="bubuRunner" style="left:5%">
+        <img src="/assets/bubu-black.jpg" alt="布布">
+    </div>
+
+    <!-- 一二 -->
+    <div class="yiyi-runner" id="yiyiRunner" style="left:75%">
+        <img src="/assets/yiyi.jpg" alt="一二">
+    </div>
+
+    <!-- 速度指示 -->
+    <div class="speed-indicator" id="speedIndicator">⚡⚡⚡</div>
+
+    <!-- 提示 -->
+    <div class="hint" id="hintEl">
+        <i class="fas fa-hand-pointer"></i> 疯狂点击让一二逃跑！跑太慢会被布布抓到！
+    </div>
+</div>
+
+<!-- 底部 -->
+<div class="bbar">
+    <div class="bstat"><div class="bstat-num" id="scoreEl">0.0</div><div class="bstat-lbl">存活秒数</div></div>
+    <div class="bstat"><div class="bstat-num" id="speedEl">0</div><div class="bstat-lbl">逃跑速度</div></div>
+    <div class="bstat"><div class="bstat-num" id="catchEl" style="color:#FF6B6B">0</div><div class="bstat-lbl">被抓次数</div></div>
+</div>
+
+<!-- 开始画面 -->
+<div class="start-screen" id="startScreen">
+    <div style="display:flex;gap:16px;align-items:center">
+        <img src="/assets/bubu-black.jpg" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #FFD93D;box-shadow:0 0 20px rgba(255,217,61,0.4)">
+        <div style="font-size:36px">🏃</div>
+        <img src="/assets/yiyi.jpg" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #4fc3f7;box-shadow:0 0 20px rgba(79,195,247,0.4)">
+    </div>
+    <div class="start-title">🏃 追逐战</div>
+    <div class="start-sub">布布要抓一二！<br>疯狂点击让一二逃跑，跑太慢就会被抓到！</div>
+    <button class="start-btn" onclick="startGame()">开始追逐！</button>
+</div>
+
+<!-- 结果画面 -->
+<div class="result-screen" id="resultScreen" style="display:none">
+    <div class="result-title">被抓到了！😵</div>
+    <div class="result-time" id="resultTime">0.0秒</div>
+    <div class="result-label">存活时间</div>
+    <button class="result-btn" onclick="restartGame()">再来一次</button>
+</div>
+
+<div id="achieveBox"></div>
+
+<script>
+// ========== 游戏状态 ==========
+let phase = 'start'; // start | playing | result
+let bubuPos = 5;    // 百分比，从左到右
+let yiyiPos = 75;   // 百分比，从左到右
+let speed = 0;
+let catchCount = 0;
+let survivalTime = 0;
+let lastTap = 0;
+let tapCount = 0;
+let gameTimer = null;
+let earned = new Set();
+
+const chaseArea   = document.getElementById('chaseArea');
+const bubuRunner  = document.getElementById('bubuRunner');
+const yiyiRunner  = document.getElementById('yiyiRunner');
+const progressFill = document.getElementById('progressFill');
+const timerEl     = document.getElementById('timerEl');
+const speedEl     = document.getElementById('speedEl');
+const catchEl     = document.getElementById('catchEl');
+const scoreEl     = document.getElementById('scoreEl');
+const speedInd    = document.getElementById('speedIndicator');
+const startScreen = document.getElementById('startScreen');
+const resultScreen = document.getElementById('resultScreen');
+const resultTime  = document.getElementById('resultTime');
+
+// ========== 开始 ==========
+function startGame() {
+    phase = 'playing';
+    startScreen.style.display = 'none';
+    resultScreen.style.display = 'none';
+    bubuPos = 5;
+    yiyiPos = 75;
+    speed = 0;
+    catchCount = 0;
+    survivalTime = 0;
+    tapCount = 0;
+    lastTap = Date.now();
+    updatePositions();
+    catchEl.textContent = 0;
+    scoreEl.textContent = '0.0';
+
+    gameTimer = setInterval(() => {
+        survivalTime += 0.1;
+        timerEl.textContent = survivalTime.toFixed(1) + '秒';
+        scoreEl.textContent = survivalTime.toFixed(1);
+        tick();
+        checkAchieve();
+    }, 100);
+}
+
+// ========== 每帧逻辑 ==========
+function tick() {
+    const now = Date.now();
+    const gap = now - lastTap;
+
+    // 点击速度
+    if (gap < 150) {
+        speed = Math.min(20, speed + 3);
+    } else if (gap < 400) {
+        speed = Math.min(15, speed + 1);
+    } else {
+        speed = Math.max(0, speed - 2);
+    }
+    speedEl.textContent = speed;
+
+    // 一二逃跑
+    if (speed > 0) {
+        yiyiPos = Math.min(90, yiyiPos + speed * 0.15);
+        if (Math.random() < 0.3) {
+            yiyiRunner.classList.remove('run');
+            void yiyiRunner.offsetWidth;
+            yiyiRunner.classList.add('run');
+        }
+        // 显示速度
+        if (speed >= 15) {
+            speedInd.textContent = '⚡⚡⚡';
+            speedInd.classList.remove('show');
+            void speedInd.offsetWidth;
+            speedInd.classList.add('show');
+        } else if (speed >= 8) {
+            speedInd.textContent = '⚡⚡';
+            speedInd.classList.remove('show');
+            void speedInd.offsetWidth;
+            speedInd.classList.add('show');
+        } else {
+            speedInd.classList.remove('show');
+        }
+    }
+
+    // 布布追
+    bubuPos = Math.min(yiyiPos - 5, bubuPos + (20 - speed * 0.8) * 0.05);
+
+    updatePositions();
+    updateProgress();
+
+    // 抓到判定
+    if (bubuPos >= yiyiPos - 5) {
+        caught();
+    }
+}
+
+function updatePositions() {
+    bubuRunner.style.left = bubuPos + '%';
+    yiyiRunner.style.left = yiyiPos + '%';
+}
+
+function updateProgress() {
+    const range = 90 - 5;
+    const fill = (yiyiPos - bubuPos) / range * 100;
+    progressFill.style.width = Math.max(0, Math.min(100, fill)) + '%';
+}
+
+// ========== 被抓 ==========
+function caught() {
+    clearInterval(gameTimer);
+    catchCount++;
+    catchEl.textContent = catchCount;
+
+    bubuRunner.classList.add('caught');
+    yiyiRunner.classList.add('caught');
+    chaseArea.classList.add('scene-shake');
+
+    spawnPow('💥 抓到！');
+
+    setTimeout(() => {
+        bubuRunner.classList.remove('caught');
+        yiyiRunner.classList.remove('caught');
+        chaseArea.classList.remove('scene-shake');
+
+        if (catchCount >= 5) {
+            gameOver();
+        } else {
+            // 重置位置继续
+            bubuPos = 5;
+            yiyiPos = 75;
+            speed = 0;
+            lastTap = Date.now();
+            updatePositions();
+            gameTimer = setInterval(() => {
+                survivalTime += 0.1;
+                timerEl.textContent = survivalTime.toFixed(1) + '秒';
+                scoreEl.textContent = survivalTime.toFixed(1);
+                tick();
+            }, 100);
+        }
+    }, 800);
+}
+
+function gameOver() {
+    phase = 'result';
+    resultTime.textContent = survivalTime.toFixed(1) + '秒';
+    resultScreen.style.display = 'flex';
+    checkAchieve();
+}
+
+function restartGame() {
+    startGame();
+}
+
+// ========== 点击 ==========
+chaseArea.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    if (phase !== 'playing') return;
+    lastTap = Date.now();
+    tapCount++;
+    speed = Math.min(20, speed + 2);
+});
+
+// ========== 特效 ==========
+function spawnPow(text) {
+    const el = document.createElement('div');
+    el.className = 'pow-word';
+    el.textContent = text;
+    el.style.left = '50%'; el.style.top = '40%';
+    el.style.color = '#FFD93D';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 600);
+}
+
+// ========== 成就 ==========
+const ACHS = [
+    {id:'t3',  label:'存活3秒 🌱', cond:()=>survivalTime>=3},
+    {id:'t10', label:'存活10秒！⚡', cond:()=>survivalTime>=10},
+    {id:'t30', label:'存活30秒！🔥', cond:()=>survivalTime>=30},
+    {id:'c1',  label:'被抓1次 💀', cond:()=>catchCount>=1},
+    {id:'c5',  label:'被抓5次 😂', cond:()=>catchCount>=5},
+];
+function checkAchieve() {
+    ACHS.forEach(a => {
+        if (!earned.has(a.id) && a.cond()) {
+            earned.add(a.id);
+            const el = document.createElement('div');
+            el.className = 'achieve';
+            el.innerHTML = `<div style="font-size:16px">🏆 成就解锁</div><div style="font-size:12px;margin-top:3px;color:#FFD93D">${a.label}</div>`;
+            document.getElementById('achieveBox').appendChild(el);
+            setTimeout(() => el.remove(), 2800);
+        }
+    });
+}
+</script>
+</body>
+</html>
