@@ -461,10 +461,10 @@
     // 初始化主题图标
     updateThemeIcon(localStorage.getItem('theme') || 'dark');
 
-    // ========== 加载新闻(轮播) - 只加载最新一批 ==========
+    // ========== 加载新闻(轮播) ==========
     async function loadNews() {
         try {
-            tickerNews = await (await fetch('/api/news/latest')).json();
+            tickerNews = await (await fetch('/api/news')).json();
             renderTicker(tickerNews);
             document.getElementById('news-count-badge').textContent = tickerNews.length;
         } catch(e) { setTickerDefault(); }

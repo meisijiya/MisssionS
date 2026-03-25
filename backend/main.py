@@ -40,7 +40,7 @@ def init_db():
 
 # ========== 新闻爬虫 ==========
 def fetch_news():
-    """每天4个时间点抓取新闻，INSERT模式，总量上限40条"""
+    """每天08:00抓取30条新闻（3个源各10条），覆盖模式"""
     rss_feeds = [
         ('36氪', 'https://36kr.com/feed'),
         ('人民日报', 'http://www.people.com.cn/rss/politics.xml'),
@@ -52,21 +52,12 @@ def fetch_news():
         'Accept-Language': 'zh-CN,zh;q=0.9',
     }
 
-    # 获取当前批次号（当天最大批次，最大为4）
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("""
-        SELECT COALESCE(MAX(batch), 0)
-        FROM news
-        WHERE date(fetched_at) = date('now')
-    """)
-    today_max_batch = c.fetchone()[0]
-    new_batch = (today_max_batch % 4) + 1  # 0->1->2->3->4->1循环
-    conn.close()
-
     count = 0
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
+
+    # 抓新数据前先清空旧数据（覆盖模式）
+    c.execute('DELETE FROM news')
 
     for name, url in rss_feeds:
         try:
@@ -80,8 +71,8 @@ def fetch_news():
                 summary = re.sub(r'<[^>]+>', '', summary).strip()[:200]
                 if title:
                     c.execute(
-                        'INSERT INTO news (title, link, source, summary, batch) VALUES (?, ?, ?, ?, ?)',
-                        (title, link, name, summary, new_batch)
+                        'INSERT INTO news (title, link, source, summary) VALUES (?, ?, ?, ?)',
+                        (title, link, name, summary)
                     )
                     count += 1
         except Exception as e:
@@ -89,23 +80,12 @@ def fetch_news():
 
     conn.commit()
     conn.close()
-    trim_news()
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Batch {new_batch}: fetched {count} news")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Fetched {count} news")
     return count
 
-def trim_news():
-    """FIFO：只保留最新40条"""
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('SELECT id FROM news ORDER BY id DESC')
-    all_ids = [row[0] for row in c.fetchall()]
-    if len(all_ids) > 40:
-        to_delete = all_ids[40:]
-        placeholders = ','.join('?' * len(to_delete))
-        c.execute(f'DELETE FROM news WHERE id IN ({placeholders})', to_delete)
-        conn.commit()
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] FIFO: deleted {len(to_delete)}, kept 40")
-    conn.close()
+# ========== 任务 API ==========
+
+
 
 # ========== 任务 API ==========
 @app.route('/api/tasks', methods=['GET'])
@@ -190,22 +170,6 @@ def get_news():
     conn.close()
     return jsonify(news)
 
-@app.route('/api/news/latest', methods=['GET'])
-def get_latest_batch():
-    """只返回最近一批抓取的10条新闻（用于顶部滚动）"""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
-    c.execute("""
-        SELECT * FROM news
-        WHERE fetched_at >= datetime('now', '-7 days')
-        ORDER BY batch DESC, fetched_at DESC
-        LIMIT 10
-    """)
-    news = [dict(row) for row in c.fetchall()]
-    conn.close()
-    return jsonify(news)
-
 @app.route('/api/news/refresh', methods=['POST'])
 def refresh_news():
     n = fetch_news()
@@ -223,11 +187,10 @@ def daily_reset():
 def init_scheduler():
     scheduler = BackgroundScheduler(timezone='Asia/Shanghai')
     scheduler.add_job(daily_reset, 'cron', hour=3, minute=0, id='daily_reset')
-    for hour in [8, 12, 16, 20]:
-        scheduler.add_job(fetch_news, 'cron', hour=hour, minute=0, id=f'news_{hour}')
+    scheduler.add_job(fetch_news, 'cron', hour=8, minute=0, id='news_8')
     fetch_news()  # 启动时抓一次
     scheduler.start()
-    print("[Scheduler] 启动 | 任务清空:03:00 | 新闻抓取:08:00/12:00/16:00/20:00")
+    print("[Scheduler] 启动 | 任务清空:03:00 | 新闻抓取:08:00")
 
 @app.route('/')
 def index():
