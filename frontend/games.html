@@ -66,13 +66,13 @@
         .game-card:hover { background: var(--card-hover); transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,0.25); }
 
         .card-thumb {
-            height: 120px;
+            height: 130px;
             display: flex; align-items: center; justify-content: center;
             position: relative; overflow: hidden;
         }
-        .card-thumb-bg { position: absolute; inset: 0; transition: transform 0.3s; }
-        .game-card:hover .card-thumb-bg { transform: scale(1.05); }
-        .card-thumb-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.5)); }
+        .card-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+        .game-card:hover .card-thumb img { transform: scale(1.06); }
+        .card-thumb-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.55)); }
         .card-icon { position: relative; z-index: 2; font-size: 36px; }
 
         .card-status {
@@ -116,7 +116,7 @@
     <!-- 敲蛋 -->
     <a href="/game" class="game-card" style="border-color:#58a6ff33">
         <div class="card-thumb">
-            <div class="card-thumb-bg" style="background:radial-gradient(circle at 50% 60%, #f5e6c8 0%, #e8d4a8 40%, #c8a870 100%)"></div>
+            <img src="/assets/bubu-cool-card.jpg" alt="">
             <div class="card-thumb-overlay"></div>
             <div class="card-icon">🥚</div>
             <div class="card-status status-play">可玩</div>
@@ -134,7 +134,7 @@
     <!-- 追逐战 -->
     <a href="/game3" class="game-card" style="border-color:#FFD93D33">
         <div class="card-thumb">
-            <img src="/assets/bubu-white-card.jpg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.75">
+            <img src="/assets/bubu-pink-card.jpg" alt="">
             <div class="card-thumb-overlay"></div>
             <div class="card-icon">🏃</div>
             <div class="card-status status-play">可玩</div>
@@ -152,7 +152,7 @@
     <!-- 快递接接接 -->
     <a href="/game4" class="game-card" style="border-color:#FFD93D33">
         <div class="card-thumb">
-            <img src="/assets/bubu-black-card.jpg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.75">
+            <img src="/assets/bubu-cool-card.jpg" alt="">
             <div class="card-thumb-overlay"></div>
             <div class="card-icon">📦</div>
             <div class="card-status status-play">可玩</div>
@@ -166,23 +166,6 @@
             </div>
         </div>
     </a>
-
-    <!-- 即将上线 -->
-    <div class="game-card" style="opacity:0.6;cursor:default">
-        <div class="card-thumb">
-            <div class="card-thumb-bg" style="background:linear-gradient(135deg,#1a1a2e,#16213e)"></div>
-            <div class="card-thumb-overlay"></div>
-            <div class="card-icon" style="opacity:0.5">🎮</div>
-            <div class="card-status status-soon">敬请期待</div>
-        </div>
-        <div class="card-body">
-            <div class="card-title" style="color:var(--text-2)">???</div>
-            <div class="card-desc">更多游戏正在开发中...</div>
-            <div class="card-tags">
-                <span class="card-tag">🔜 敬请期待</span>
-            </div>
-        </div>
-    </div>
 
 </div>
 
