@@ -58,6 +58,13 @@ def fetch_news():
         ('36氪', 'https://36kr.com/feed'),
         ('人民日报', 'http://www.people.com.cn/rss/politics.xml'),
         ('新浪新闻', 'http://rss.sina.com.cn/news/china/focus15.xml'),
+        ('IT之家', 'https://www.ithome.com/rss/'),
+        ('虎嗅', 'https://www.huxiu.com/rss/0.xml'),
+        ('爱范儿', 'https://www.ifanr.com/feed'),
+        ('少数派', 'https://sspai.com/feed'),
+        ('Solidot', 'https://www.solidot.org/index.rss'),
+        ('雷科技', 'https://www.leikeji.com/rss'),
+        ('钛媒体', 'http://www.tmtpost.com/rss'),
     ]
 
     headers = {
