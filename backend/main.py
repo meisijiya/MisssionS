@@ -4,7 +4,12 @@ Task App Backend - 老江湖的任务管理系统
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 import os, sqlite3
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+BJ_TZ = timezone(timedelta(hours=8))
+
+def bj_now():
+    return datetime.now(BJ_TZ).strftime('%Y-%m-%d %H:%M:%S')
 from apscheduler.schedulers.background import BackgroundScheduler
 import requests
 import feedparser
@@ -24,7 +29,7 @@ def init_db():
         color TEXT DEFAULT '#4a9eff',
         creator TEXT DEFAULT '匿名',
         completed INTEGER DEFAULT 0,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        created_at TEXT,
         completed_at TEXT
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS news (
@@ -33,7 +38,7 @@ def init_db():
         link TEXT,
         source TEXT,
         summary TEXT,
-        fetched_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        fetched_at TEXT,
         batch INTEGER DEFAULT 0
     )''')
     conn.commit()
@@ -60,6 +65,8 @@ def fetch_news():
     # 抓新数据前先清空旧数据（覆盖模式）
     c.execute('DELETE FROM news')
 
+    fetched_at = bj_now()  # 本批次统一时间
+
     for name, url in rss_feeds:
         try:
             resp = requests.get(url, headers=headers, timeout=10)
@@ -72,8 +79,8 @@ def fetch_news():
                 summary = re.sub(r'<[^>]+>', '', summary).strip()[:200]
                 if title:
                     c.execute(
-                        'INSERT INTO news (title, link, source, summary) VALUES (?, ?, ?, ?)',
-                        (title, link, name, summary)
+                        'INSERT INTO news (title, link, source, summary, fetched_at) VALUES (?, ?, ?, ?, ?)',
+                        (title, link, name, summary, fetched_at)
                     )
                     count += 1
         except Exception as e:
@@ -81,7 +88,7 @@ def fetch_news():
 
     conn.commit()
     conn.close()
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Fetched {count} news")
+    print(f"[{bj_now()}] Fetched {count} news")
     return count
 
 # ========== 任务 API ==========
@@ -109,7 +116,8 @@ def create_task():
         return jsonify({'error': '标题不能为空'}), 400
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute('INSERT INTO tasks (title, color, creator) VALUES (?, ?, ?)', (title, color, creator))
+    c.execute('INSERT INTO tasks (title, color, creator, created_at) VALUES (?, ?, ?, ?)',
+              (title, color, creator, bj_now()))
     task_id = c.lastrowid
     conn.commit()
     c.execute('SELECT id, title, color, creator, completed, created_at, completed_at FROM tasks WHERE id=?', (task_id,))
@@ -125,7 +133,7 @@ def update_task(task_id):
     c = conn.cursor()
     if 'completed' in data:
         completed = 1 if data['completed'] else 0
-        completed_at = datetime.now().isoformat() if completed else None
+        completed_at = bj_now() if completed else None
         c.execute('UPDATE tasks SET completed=?, completed_at=? WHERE id=?', (completed, completed_at, task_id))
     if 'color' in data:
         c.execute('UPDATE tasks SET color=? WHERE id=?', (data['color'], task_id))
@@ -179,7 +187,7 @@ def refresh_news():
 
 # ========== 定时任务 ==========
 def daily_reset():
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 执行每日任务清空...")
+    print(f"[{bj_now()}] 执行每日任务清空...")
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute('DELETE FROM tasks')
