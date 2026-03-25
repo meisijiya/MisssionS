@@ -206,6 +206,10 @@ def init_scheduler():
 def index():
     return send_from_directory(app.static_folder, 'index.html')
 
+@app.route('/game')
+def game():
+    return send_from_directory(app.static_folder, 'game.html')
+
 init_db()
 init_scheduler()
 if __name__ == '__main__':
