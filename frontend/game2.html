@@ -101,6 +101,12 @@
             font-size: 22px;
         }
         .bite-mark.show { opacity: 1; }
+        /* 角色照片 */
+        .char-photo {
+            width: 100%; height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
 
         /* 布布叫声气泡 */
         .bark-bubble {
@@ -257,21 +263,7 @@
 
         <!-- 狗屁股（被咬）-->
         <div class="dog-butt" id="dogButt">
-            <!-- 狗屁股SVG -->
-            <svg viewBox="0 0 100 100" width="100" height="100">
-                <!-- 屁股左半 -->
-                <ellipse cx="28" cy="55" rx="25" ry="35" fill="#C4A882"/>
-                <!-- 屁股右半 -->
-                <ellipse cx="72" cy="55" rx="25" ry="35" fill="#B8986A"/>
-                <!-- 中间缝 -->
-                <ellipse cx="50" cy="80" rx="6" ry="8" fill="#8B6B4A"/>
-                <!-- 左腿 -->
-                <ellipse cx="15" cy="88" rx="12" ry="10" fill="#B8986A"/>
-                <!-- 右腿 -->
-                <ellipse cx="85" cy="88" rx="12" ry="10" fill="#C4A882"/>
-                <!-- 尾巴 -->
-                <ellipse cx="95" cy="30" rx="8" ry="14" fill="#C4A882" transform="rotate(30,95,30)"/>
-            </svg>
+            <img src="/assets/bubu.jpg" class="char-photo" alt="布布" style="border-radius:50% 50% 40% 40%;">
             <!-- 咬痕 -->
             <div class="bite-mark" id="bite1">🩹</div>
             <div class="bite-mark" id="bite2">🩹</div>
@@ -280,59 +272,13 @@
 
         <!-- 狗头 -->
         <div class="dog-head" id="dogHead">
-            <svg viewBox="0 0 100 90" width="100" height="90">
-                <!-- 头 -->
-                <ellipse cx="50" cy="50" rx="38" ry="35" fill="#C4A882"/>
-                <!-- 左耳 -->
-                <ellipse cx="18" cy="25" rx="14" ry="22" fill="#B8986A" transform="rotate(-15,18,25)"/>
-                <!-- 右耳 -->
-                <ellipse cx="82" cy="25" rx="14" ry="22" fill="#C4A882" transform="rotate(15,82,25)"/>
-                <!-- 脸 -->
-                <ellipse cx="50" cy="60" rx="18" ry="14" fill="#E8D5B8"/>
-                <!-- 鼻子 -->
-                <ellipse cx="50" cy="52" rx="8" ry="6" fill="#4A3728"/>
-                <!-- 左眼 -->
-                <circle cx="35" cy="42" r="7" fill="#2A1A0A"/>
-                <circle cx="33" cy="40" r="2.5" fill="#fff"/>
-                <!-- 右眼 -->
-                <circle cx="65" cy="42" r="7" fill="#2A1A0A"/>
-                <circle cx="63" cy="40" r="2.5" fill="#fff"/>
-                <!-- 嘴 -->
-                <path d="M42 65 Q50 72 58 65" fill="none" stroke="#4A3728" stroke-width="2" stroke-linecap="round"/>
-            </svg>
+            <!-- 布布大头照 -->
+            <img src="/assets/bubu.jpg" class="char-photo" alt="布布">
         </div>
 
-        <!-- 一二（龙） -->
+        <!-- 一二 -->
         <div class="yiyi" id="yiyi">
-            <!-- 龙身 -->
-            <svg viewBox="0 0 90 130" width="90" height="130">
-                <!-- 身体 -->
-                <ellipse cx="45" cy="90" rx="28" ry="35" fill="#4CAF50"/>
-                <!-- 龙头 -->
-                <ellipse cx="45" cy="50" rx="24" ry="22" fill="#66BB6A"/>
-                <!-- 龙角 -->
-                <path d="M28 35 L20 15 L32 30" fill="#388E3C"/>
-                <path d="M62 35 L70 15 L58 30" fill="#388E3C"/>
-                <!-- 龙眼 -->
-                <circle cx="36" cy="48" r="6" fill="#FF5722"/>
-                <circle cx="54" cy="48" r="6" fill="#FF5722"/>
-                <circle cx="36" cy="48" r="3" fill="#1a1a1a"/>
-                <circle cx="54" cy="48" r="3" fill="#1a1a1a"/>
-                <!-- 龙嘴 -->
-                <path d="M35 60 Q45 68 55 60" fill="none" stroke="#2E7D32" stroke-width="2.5" stroke-linecap="round"/>
-                <!-- 牙齿 -->
-                <polygon points="38,60 40,66 42,60" fill="#fff"/>
-                <polygon points="48,60 50,66 52,60" fill="#fff"/>
-                <!-- 前爪 -->
-                <ellipse cx="25" cy="105" rx="10" ry="8" fill="#66BB6A"/>
-                <ellipse cx="65" cy="105" rx="10" ry="8" fill="#4CAF50"/>
-                <!-- 龙尾 -->
-                <path d="M45 125 Q70 135 80 120 Q85 110 75 115" fill="none" stroke="#4CAF50" stroke-width="8" stroke-linecap="round"/>
-                <!-- 鳞片 -->
-                <ellipse cx="35" cy="80" rx="5" ry="4" fill="#388E3C" opacity="0.5"/>
-                <ellipse cx="55" cy="85" rx="5" ry="4" fill="#388E3C" opacity="0.5"/>
-                <ellipse cx="40" cy="100" rx="5" ry="4" fill="#388E3C" opacity="0.5"/>
-            </svg>
+            <img src="/assets/yiyi.jpg" class="char-photo" alt="一二" style="width:90px;height:110px;object-fit:contain;">
         </div>
 
         <!-- 牙印星星 -->
