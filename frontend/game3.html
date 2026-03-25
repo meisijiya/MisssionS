@@ -219,7 +219,7 @@
 
     <!-- 一二（追布布） -->
     <div class="yiyi-runner" id="yiyiRunner" style="left:75%">
-        <img src="/assets/yiyi.jpg" alt="一二">
+        <img src="/assets/yiyi-chase.png" alt="一二">
     </div>
 
     <!-- 速度指示 -->
@@ -241,7 +241,7 @@
 <!-- 开始画面 -->
 <div class="start-screen" id="startScreen">
     <div style="display:flex;gap:16px;align-items:center">
-        <img src="/assets/yiyi.jpg" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #4fc3f7;box-shadow:0 0 20px rgba(79,195,247,0.4)">
+        <img src="/assets/yiyi-chase.png" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #4fc3f7;box-shadow:0 0 20px rgba(79,195,247,0.4)">
         <div style="font-size:36px">🏃</div>
         <img src="/assets/bubu-white-chase.png" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #FFD93D;box-shadow:0 0 20px rgba(255,217,61,0.4)">
     </div>
@@ -261,6 +261,48 @@
 <div id="achieveBox"></div>
 
 <script>
+// ========== 音效 ==========
+let _ac3 = null;
+function getAudio3() {
+    if (!_ac3) _ac3 = new (window.AudioContext || window.webkitAudioContext)();
+    return _ac3;
+}
+function playFootstep() {
+    const ctx = getAudio3();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.setValueAtTime(120, ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.05);
+    g.gain.setValueAtTime(0.3, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+    o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.05);
+}
+function playWhoosh() {
+    const ctx = getAudio3();
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.15, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3);
+    const src = ctx.createBufferSource(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+    f.type = 'bandpass'; f.frequency.value = 2000;
+    src.buffer = buf; src.connect(f); f.connect(g); g.connect(ctx.destination);
+    g.gain.setValueAtTime(0.15, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    src.start(ctx.currentTime);
+}
+function playThud() {
+    const ctx = getAudio3();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.setValueAtTime(80, ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.3);
+    g.gain.setValueAtTime(0.5, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.3);
+}
+function playBgm() {
+    // 简单的逃跑背景音
+}
+
 // ========== 游戏状态 ==========
 let phase = 'start'; // start | playing | result
 let bubuPos = 5;    // 百分比，从左到右
@@ -336,6 +378,7 @@ function tick() {
         }
         // 显示速度
         if (speed >= 15) {
+            playWhoosh();
             speedInd.textContent = '⚡⚡⚡';
             speedInd.classList.remove('show');
             void speedInd.offsetWidth;
@@ -375,8 +418,9 @@ function updateProgress() {
 
 // ========== 被抓 ==========
 function caught() {
-    clearInterval(gameTimer);
-    catchCount++;
+        clearInterval(gameTimer);
+        playThud();
+        catchCount++;
     catchEl.textContent = catchCount;
 
     bubuRunner.classList.add('caught');
@@ -424,6 +468,7 @@ function restartGame() {
 chaseArea.addEventListener('pointerdown', e => {
     e.preventDefault();
     if (phase !== 'playing') return;
+    playFootstep();
     lastTap = Date.now();
     tapCount++;
     speed = Math.min(20, speed + 2);

@@ -252,6 +252,48 @@
 <div id="achieveBox"></div>
 
 <script>
+    // ========== 音效 ==========
+    let _ac = null;
+    function getAudio() {
+        if (!_ac) _ac = new (window.AudioContext || window.webkitAudioContext)();
+        return _ac;
+    }
+    function playTap() {
+        const ctx = getAudio();
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.frequency.setValueAtTime(600, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.07);
+        g.gain.setValueAtTime(0.25, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.07);
+        o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.07);
+    }
+    function playCrack() {
+        const ctx = getAudio();
+        const buf = ctx.createBuffer(1, ctx.sampleRate * 0.2, ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2);
+        const src = ctx.createBufferSource(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+        f.type = 'highpass'; f.frequency.value = 600;
+        src.buffer = buf; src.connect(f); f.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.6, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+        src.start(ctx.currentTime);
+    }
+    function playCombo() {
+        const ctx = getAudio();
+        [523, 659, 784].forEach((f, i) => {
+            const o = ctx.createOscillator(), g = ctx.createGain();
+            o.connect(g); g.connect(ctx.destination);
+            o.frequency.value = f;
+            const t = ctx.currentTime + i * 0.07;
+            g.gain.setValueAtTime(0, t);
+            g.gain.linearRampToValueAtTime(0.2, t + 0.02);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+            o.start(t); o.stop(t + 0.2);
+        });
+    }
+
     // ========== 状态 ==========
     const MAX_HP = 12;
     let hp = MAX_HP;
@@ -271,6 +313,7 @@
     tapArea.addEventListener('pointerdown', e => {
         e.preventDefault();
         totalTaps++;
+        playTap();
 
         const now = Date.now();
         const gap = now - lastTap;
@@ -280,7 +323,7 @@
         if (gap < 320) {
             combo++;
             if (combo > maxCombo) maxCombo = combo;
-            if (combo >= 5 && combo % 5 === 0) showComboPop(combo);
+            if (combo >= 5 && combo % 5 === 0) { playCombo(); showComboPop(combo); }
             checkAchieve();
         } else {
             combo = Math.max(0, combo - 2);
@@ -320,6 +363,7 @@
         totalEggs++;
         combo++;
         if (combo > maxCombo) maxCombo = combo;
+        playCrack();
 
         // 隐藏蛋
         eggSvg.style.transition = 'transform 0.5s, opacity 0.5s';
