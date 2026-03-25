@@ -73,12 +73,15 @@
             border-radius: 0 20px 20px 0;
             z-index: 2;
         }
+        .news-track-wrap {
+            overflow: hidden;
+            padding-left: 72px;
+        }
         .news-track {
             display: flex;
             gap: 48px;
             white-space: nowrap;
-            overflow: hidden;
-            padding: 18px 0 18px 72px;
+            padding: 18px 0 18px 0;
             animation: ticker 20s linear infinite;
         }
         .news-track:hover { animation-play-state: paused; }
@@ -229,8 +232,10 @@
 <!-- 新闻轮播 -->
 <div class="news-wrap" id="news-banner" onclick="showFullNews()">
     <div class="news-flag"><i class="fas fa-rss fa-xs mr-1"></i>NEWS</div>
-    <div class="news-track" id="news-track">
-        <span class="news-item"><span class="news-src">系统</span>正在加载新闻...</span>
+    <div class="news-track-wrap">
+        <div class="news-track" id="news-track">
+            <span class="news-item"><span class="news-src">系统</span>正在加载新闻...</span>
+        </div>
     </div>
 </div>
 
