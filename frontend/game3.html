@@ -182,6 +182,7 @@
             text-shadow: 0 0 30px rgba(255,217,61,0.4);
         }
         .start-sub { font-size: 14px; color: rgba(255,255,255,0.5); text-align: center; line-height: 1.6; }
+        .title { font-size: 16px; font-weight: 800; color: #4fc3f7; }
         .start-btn {
             background: linear-gradient(135deg, #FFD93D, #FF8C00);
             border: none; border-radius: 14px;
@@ -197,7 +198,7 @@
 <!-- 顶部 -->
 <div class="topbar">
     <a href="/games" class="back-btn"><i class="fas fa-th"></i> 游戏合集</a>
-    <div class="title">🏃 追逐战</div>
+    <div class="title" style="color:#4fc3f7">🏃 追逐战</div>
     <div class="timer-pill" id="timerEl">0.0秒</div>
 </div>
 
@@ -211,12 +212,12 @@
         <div class="progress-fill" id="progressFill"></div>
     </div>
 
-    <!-- 布布 -->
+    <!-- 布布（被追） -->
     <div class="bubu-runner" id="bubuRunner" style="left:5%">
-        <img src="/assets/bubu-black.jpg" alt="布布">
+        <img src="/assets/bubu-white-chase.png" alt="布布">
     </div>
 
-    <!-- 一二 -->
+    <!-- 一二（追布布） -->
     <div class="yiyi-runner" id="yiyiRunner" style="left:75%">
         <img src="/assets/yiyi.jpg" alt="一二">
     </div>
@@ -226,7 +227,7 @@
 
     <!-- 提示 -->
     <div class="hint" id="hintEl">
-        <i class="fas fa-hand-pointer"></i> 疯狂点击让一二逃跑！跑太慢会被布布抓到！
+        <i class="fas fa-hand-pointer"></i> 疯狂点击让布布逃跑！跑太慢会被一二抓到！
     </div>
 </div>
 
@@ -240,12 +241,12 @@
 <!-- 开始画面 -->
 <div class="start-screen" id="startScreen">
     <div style="display:flex;gap:16px;align-items:center">
-        <img src="/assets/bubu-black.jpg" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #FFD93D;box-shadow:0 0 20px rgba(255,217,61,0.4)">
-        <div style="font-size:36px">🏃</div>
         <img src="/assets/yiyi.jpg" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #4fc3f7;box-shadow:0 0 20px rgba(79,195,247,0.4)">
+        <div style="font-size:36px">🏃</div>
+        <img src="/assets/bubu-white-chase.png" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #FFD93D;box-shadow:0 0 20px rgba(255,217,61,0.4)">
     </div>
     <div class="start-title">🏃 追逐战</div>
-    <div class="start-sub">布布要抓一二！<br>疯狂点击让一二逃跑，跑太慢就会被抓到！</div>
+    <div class="start-sub">一二要抓布布！<br>疯狂点击让布布逃跑，跑太慢就会被抓到！</div>
     <button class="start-btn" onclick="startGame()">开始追逐！</button>
 </div>
 
