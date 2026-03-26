@@ -422,7 +422,7 @@
         document.getElementById('view-news').style.display = v === 'news' ? '' : 'none';
         document.getElementById('tab-task').classList.toggle('active', v === 'task');
         document.getElementById('tab-news').classList.toggle('active', v === 'news');
-        if (v === 'news') loadAllNews();
+        if (v === 'news') renderFullNews(); // 数据已缓存，直接渲染
     }
 
     // ========== 颜色选择 ==========
@@ -529,79 +529,37 @@
     // 初始化主题图标
     updateThemeIcon(localStorage.getItem('theme') || 'dark');
 
-    // ========== 加载新闻(轮播) ==========
+    // ========== 新闻加载（一次性获取缓存） ==========
     async function loadNews() {
-        // 滚动新闻已由 window.load 事件初始化，这里只加载全量新闻
-        await loadAllNews();
-    }
-
-    // ========== 全量新闻页（单独加载7天全部） ==========
-    async function loadAllNews() {
         try {
-            allNews = await (await fetch('/api/news?limit=500')).json();
+            allNews = await fetch('/api/news?limit=500').then(r => r.json());
+            allNews.sort(() => Math.random() - 0.5); // 打乱顺序
             document.getElementById('news-count-badge').textContent = allNews.length;
+            // 初始化滚动条
+            loadTickerBatch();
             renderFullNews();
-        } catch(e) { console.error(e); }
+        } catch(e) { setTickerDefault(); }
     }
 
-    // ========== 滚动新闻队列系统 ==========
-    let tickerQueue = [];
-    let currentBatch = [];
-    let nextBatch = [];
-    let isFetchingMore = false;
-
-    function makeTickerItem(n) {
-        return `<a class="news-item" href="${n.link||'#'}" target="_blank">
-            <span class="news-src">${esc(n.source)}</span>${esc(n.title)}
-        </a>`;
+    // ========== 滚动新闻系统（从缓存随机读取） ==========
+    function pickRandom20(arr) {
+        return [...arr].sort(() => Math.random() - 0.5).slice(0, 20);
     }
 
-    function loadTickerBatch(batch) {
+    function makeTickerHTML(batch) {
+        return batch.map(n =>
+            `<a class="news-item" href="${n.link||'#'}" target="_blank">
+                <span class="news-src">${esc(n.source)}</span>${esc(n.title)}
+            </a>`
+        ).join('');
+    }
+
+    function loadTickerBatch() {
+        if (!allNews.length) { setTickerDefault(); return; }
         const track = document.getElementById('news-track');
-        // 复制一份接在后面，实现无缝滚动
-        const dup = [...batch, ...batch];
-        track.innerHTML = dup.map(makeTickerItem).join('');
+        const batch = pickRandom20(allNews);
+        track.innerHTML = makeTickerHTML([...batch, ...batch]); // 无缝循环
     }
-
-    function prepareNextBatch() {
-        if (tickerQueue.length < 20 && !isFetchingMore) {
-            isFetchingMore = true;
-            fetch('/api/news?limit=500')
-                .then(r => r.json())
-                .then(news => {
-                    tickerQueue.push(...news.sort(() => Math.random() - 0.5));
-                    isFetchingMore = false;
-                })
-                .catch(() => { isFetchingMore = false; });
-        }
-        nextBatch = tickerQueue.splice(0, 20);
-    }
-
-    function startTickerIteration() {
-        currentBatch = nextBatch;
-        prepareNextBatch();
-        loadTickerBatch(currentBatch);
-    }
-
-    // 页面加载时初始化
-    window.addEventListener('load', async function() {
-        try {
-            tickerQueue = await fetch('/api/news?limit=500').then(r => r.json());
-            tickerQueue.sort(() => Math.random() - 0.5);
-            document.getElementById('news-count-badge').textContent = tickerQueue.length;
-
-            // 初始化前两批
-            currentBatch = tickerQueue.splice(0, 20);
-            prepareNextBatch();
-            loadTickerBatch(currentBatch);
-
-            // 每次动画循环结束，加载下一批
-            const track = document.getElementById('news-track');
-            track.addEventListener('animationiteration', startTickerIteration);
-        } catch(e) {
-            setTickerDefault();
-        }
-    });
 
     function setTickerDefault() {
         document.getElementById('news-track').innerHTML =
@@ -675,7 +633,7 @@
         } catch(e) { alert('刷新失败'); }
     }
 
-    function showFullNews() { switchView('news'); loadAllNews(); }
+    function showFullNews() { switchView('news'); }
 
     // ========== 工具 ==========
     function esc(s) {
