@@ -531,11 +531,8 @@
 
     // ========== 加载新闻(轮播) ==========
     async function loadNews() {
-        try {
-            tickerNews = await (await fetch('/api/news?limit=500')).json();
-            renderTicker(tickerNews);
-            document.getElementById('news-count-badge').textContent = tickerNews.length;
-        } catch(e) { setTickerDefault(); }
+        // 滚动新闻已由 window.load 事件初始化，这里只加载全量新闻
+        await loadAllNews();
     }
 
     // ========== 全量新闻页（单独加载7天全部） ==========
@@ -547,28 +544,63 @@
         } catch(e) { console.error(e); }
     }
 
-    function renderTicker(news) {
-        const track = document.getElementById('news-track');
-        if (!news || !news.length) { setTickerDefault(); return; }
-        // 随机打乱，双倍重复实现无缝滚动
-        const shuffled = [...news].sort(() => Math.random() - 0.5);
-        const dup = [...shuffled, ...shuffled];
-        track.innerHTML = dup.map(n =>
-            `<a class="news-item" href="${n.link||'#'}" target="_blank">
-                <span class="news-src">${esc(n.source)}</span>${esc(n.title)}
-             </a>`
-        ).join('');
+    // ========== 滚动新闻队列系统 ==========
+    let tickerQueue = [];
+    let currentBatch = [];
+    let nextBatch = [];
+    let isFetchingMore = false;
+
+    function makeTickerItem(n) {
+        return `<a class="news-item" href="${n.link||'#'}" target="_blank">
+            <span class="news-src">${esc(n.source)}</span>${esc(n.title)}
+        </a>`;
     }
 
-    // 滚动完一轮后自动请求新数据
-    const ticker = document.getElementById('news-track');
-    ticker.addEventListener('animationend', async function() {
+    function loadTickerBatch(batch) {
+        const track = document.getElementById('news-track');
+        // 复制一份接在后面，实现无缝滚动
+        const dup = [...batch, ...batch];
+        track.innerHTML = dup.map(makeTickerItem).join('');
+    }
+
+    function prepareNextBatch() {
+        if (tickerQueue.length < 20 && !isFetchingMore) {
+            isFetchingMore = true;
+            fetch('/api/news?limit=500')
+                .then(r => r.json())
+                .then(news => {
+                    tickerQueue.push(...news.sort(() => Math.random() - 0.5));
+                    isFetchingMore = false;
+                })
+                .catch(() => { isFetchingMore = false; });
+        }
+        nextBatch = tickerQueue.splice(0, 20);
+    }
+
+    function startTickerIteration() {
+        currentBatch = nextBatch;
+        prepareNextBatch();
+        loadTickerBatch(currentBatch);
+    }
+
+    // 页面加载时初始化
+    window.addEventListener('load', async function() {
         try {
-            const fresh = await fetch('/api/news?limit=500').then(r => r.json());
-            tickerNews = fresh;
-            renderTicker(tickerNews);
-            document.getElementById('news-count-badge').textContent = tickerNews.length;
-        } catch(e) {}
+            tickerQueue = await fetch('/api/news?limit=500').then(r => r.json());
+            tickerQueue.sort(() => Math.random() - 0.5);
+            document.getElementById('news-count-badge').textContent = tickerQueue.length;
+
+            // 初始化前两批
+            currentBatch = tickerQueue.splice(0, 20);
+            prepareNextBatch();
+            loadTickerBatch(currentBatch);
+
+            // 每次动画循环结束，加载下一批
+            const track = document.getElementById('news-track');
+            track.addEventListener('animationiteration', startTickerIteration);
+        } catch(e) {
+            setTickerDefault();
+        }
     });
 
     function setTickerDefault() {
