@@ -530,12 +530,44 @@
     updateThemeIcon(localStorage.getItem('theme') || 'dark');
 
     // ========== 新闻加载（一次性获取缓存） ==========
+    const NEWS_CACHE_KEY = 'news_cache';
+    const NEWS_CACHE_TTL = 8 * 60 * 60 * 1000; // 8小时
+
+    function getCachedNews() {
+        try {
+            const raw = localStorage.getItem(NEWS_CACHE_KEY);
+            if (!raw) return null;
+            const { data, ts } = JSON.parse(raw);
+            if (Date.now() - ts > NEWS_CACHE_TTL) {
+                localStorage.removeItem(NEWS_CACHE_KEY);
+                return null;
+            }
+            return data;
+        } catch(e) { return null; }
+    }
+
+    function setCachedNews(data) {
+        try {
+            localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify({ data, ts: Date.now() }));
+        } catch(e) {}
+    }
+
     async function loadNews() {
+        // 先读缓存
+        const cached = getCachedNews();
+        if (cached) {
+            allNews = cached;
+            loadTickerBatch();
+            renderFullNews();
+            document.getElementById('news-count-badge').textContent = allNews.length;
+            return;
+        }
+        // 无缓存则请求
         try {
             allNews = await fetch('/api/news?limit=500').then(r => r.json());
-            allNews.sort(() => Math.random() - 0.5); // 打乱顺序
+            allNews.sort(() => Math.random() - 0.5);
+            setCachedNews(allNews);
             document.getElementById('news-count-badge').textContent = allNews.length;
-            // 初始化滚动条
             loadTickerBatch();
             renderFullNews();
         } catch(e) { setTickerDefault(); }
@@ -628,7 +660,12 @@
     async function refreshNews() {
         try {
             await fetch('/api/news/refresh', {method:'POST'});
-            await loadNews();
+            localStorage.removeItem(NEWS_CACHE_KEY);
+            allNews = await fetch('/api/news?limit=500').then(r => r.json());
+            allNews.sort(() => Math.random() - 0.5);
+            setCachedNews(allNews);
+            document.getElementById('news-count-badge').textContent = allNews.length;
+            loadTickerBatch();
             renderFullNews();
         } catch(e) { alert('刷新失败'); }
     }
