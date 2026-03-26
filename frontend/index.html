@@ -552,7 +552,7 @@
         if (!news || !news.length) { setTickerDefault(); return; }
         // 随机打乱，双倍重复实现无缝滚动
         const shuffled = [...news].sort(() => Math.random() - 0.5);
-        const dup = [...shuffled, ...shuffled];
+        const dup = [...shuffled, ...shuffled, ...shuffled, ...shuffled];
         track.innerHTML = dup.map(n =>
             `<a class="news-item" href="${n.link||'#'}" target="_blank">
                 <span class="news-src">${esc(n.source)}</span>${esc(n.title)}
