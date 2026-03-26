@@ -82,7 +82,7 @@
             gap: 48px;
             white-space: nowrap;
             padding: 18px 0 18px 0;
-            animation: ticker 30s linear infinite;
+            animation: ticker 20s linear infinite;
         }
         .news-track:hover { animation-play-state: paused; }
         .news-item {
@@ -552,7 +552,7 @@
         if (!news || !news.length) { setTickerDefault(); return; }
         // 随机打乱，双倍重复实现无缝滚动
         const shuffled = [...news].sort(() => Math.random() - 0.5);
-        const dup = [...shuffled, ...shuffled, ...shuffled, ...shuffled];
+        const dup = [...shuffled, ...shuffled];
         track.innerHTML = dup.map(n =>
             `<a class="news-item" href="${n.link||'#'}" target="_blank">
                 <span class="news-src">${esc(n.source)}</span>${esc(n.title)}
@@ -568,7 +568,7 @@
             renderTicker(tickerNews);
             document.getElementById('news-count-badge').textContent = tickerNews.length;
         } catch(e) {}
-    }, 300000); // 5分钟刷新
+    }, 20000);
 
     function setTickerDefault() {
         document.getElementById('news-track').innerHTML =
