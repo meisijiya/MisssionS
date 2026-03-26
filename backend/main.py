@@ -256,6 +256,7 @@ def submit_score(game_name):
 # ========== 新闻 API ==========
 @app.route('/api/news', methods=['GET'])
 def get_news():
+    limit = request.args.get('limit', 500, type=int)
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
@@ -264,7 +265,8 @@ def get_news():
         SELECT * FROM news
         WHERE fetched_at >= datetime('now', '-7 days')
         ORDER BY fetched_at DESC
-    """)
+        LIMIT ?
+    """, (limit,))
     news = [dict(row) for row in c.fetchall()]
     conn.close()
     return jsonify(news)

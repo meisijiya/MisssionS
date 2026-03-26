@@ -82,7 +82,7 @@
             gap: 48px;
             white-space: nowrap;
             padding: 18px 0 18px 0;
-            animation: ticker 20s linear infinite;
+            animation: ticker 10s linear infinite;
         }
         .news-track:hover { animation-play-state: paused; }
         .news-item {
@@ -532,7 +532,7 @@
     // ========== 加载新闻(轮播) ==========
     async function loadNews() {
         try {
-            tickerNews = await (await fetch('/api/news')).json();
+            tickerNews = await (await fetch('/api/news?limit=500')).json();
             renderTicker(tickerNews);
             document.getElementById('news-count-badge').textContent = tickerNews.length;
         } catch(e) { setTickerDefault(); }
@@ -541,7 +541,7 @@
     // ========== 全量新闻页（单独加载7天全部） ==========
     async function loadAllNews() {
         try {
-            allNews = await (await fetch('/api/news')).json();
+            allNews = await (await fetch('/api/news?limit=500')).json();
             document.getElementById('news-count-badge').textContent = allNews.length;
             renderFullNews();
         } catch(e) { console.error(e); }
@@ -560,15 +560,16 @@
         ).join('');
     }
 
-    // 每20秒刷新一次滚动内容，实现"直播"效果
-    setInterval(async function() {
+    // 滚动完一轮后自动请求新数据
+    const ticker = document.getElementById('news-track');
+    ticker.addEventListener('animationend', async function() {
         try {
-            const fresh = await fetch('/api/news').then(r => r.json());
+            const fresh = await fetch('/api/news?limit=500').then(r => r.json());
             tickerNews = fresh;
             renderTicker(tickerNews);
             document.getElementById('news-count-badge').textContent = tickerNews.length;
         } catch(e) {}
-    }, 20000);
+    });
 
     function setTickerDefault() {
         document.getElementById('news-track').innerHTML =
